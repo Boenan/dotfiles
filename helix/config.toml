@@ -1,0 +1,53 @@
+theme = "everforest_dark"
+
+[editor]
+line-number = "relative"
+# end-of-line-diagnostics = "hint"
+true-color = true
+cursorline = true
+auto-info = true
+
+[editor.cursor-shape]
+normal = "block"
+insert = "bar"
+select = "underline"
+
+[editor.file-picker]
+hidden = false
+
+[editor.indent-guides]
+character = "╎"
+render = true
+
+[editor.lsp]
+display-inlay-hints = true
+display-messages = true
+# auto-signature-help = false
+
+
+[editor.inline-diagnostics]
+cursor-line = "disable"
+other-lines = "disable"
+
+[editor.statusline]
+left = ["mode", "spinner", "version-control", "file-name"]
+right = ["diagnostics", "selections", "position", "file-type"]
+
+[keys.insert]
+j = { k = "normal_mode" }
+
+[keys.normal]
+g = { y = ":set-language yaml" }
+t.s = ":sh tmux split-window -v -c '#{pane_current_path'}"
+t.k = [
+  "extend_to_line_bounds",
+  "delete_selection",
+  "move_line_up",
+  "paste_before",
+] # Move current selection up
+t.j = [
+  "extend_to_line_bounds",
+  "delete_selection",
+  "paste_after",
+] # Move current selection down
+

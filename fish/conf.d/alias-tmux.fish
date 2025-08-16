@@ -1,0 +1,5 @@
+alias tn 'tmux::new'
+alias ta 'tmux::attach'
+alias ts 'tmux::search'
+alias tl 'tmux list-session'
+alias tk 'tmux::kill'

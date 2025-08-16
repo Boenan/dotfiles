@@ -1,0 +1,4 @@
+kubectx 0.9.5
+kubectl 1.33.7
+istioctl 1.26.6
+golang 1.25.5

@@ -1,0 +1,6 @@
+command = fish --login --interactive
+theme = Everforest Dark Hard
+font-family = "Hack Nerd Font Monto"
+font-size = 24
+window-decoration = none
+mouse-hide-while-typing = true

@@ -1,0 +1,4 @@
+.config/gcloud
+.config/tfenv
+.config/exercism
+helix/.config/helix/runtime/**/*

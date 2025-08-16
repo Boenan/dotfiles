@@ -1,0 +1,32 @@
+[[language]]
+name = "yaml"
+language-servers = ["yaml-language-server"]
+indent = { tab-width = 2, unit = "  " }  # The 'unit' string contains 4 actual spaces
+file-types = ["yaml", { glob = "**/templates/*.yaml" }]
+
+[[language]]
+name = "go"
+indent = { tab-width = 4, unit = "    " }
+auto-format = true
+language-servers = ["gopls"]
+formatter = { command = "gofumpt" }
+
+[language-server.gopls]
+command = "gopls"
+
+[language-server.gopls.config]
+# diagnosticsTrigger = "Save"
+usePlaceholders = true
+staticcheck = true
+vulncheck = "Imports" # or "All"
+gofumpt = true
+
+[language-server.gopls.config.analyses]
+unusedfunc = true
+unusedparams = true
+unreachable = true
+unusedvariable = true
+
+[language-server.gopls.config.hints]
+compositeLiteralTypes = true
+

@@ -1,0 +1,103 @@
+FROM debian:bookworm-slim AS builder
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Stockholm
+ENV GOTOOLCHAIN=auto
+ENV GOPROXY=https://proxy.golang.org,direct
+ENV GOSUMDB=sum.golang.org
+ENV PATH=/usr/local/go/bin:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential \
+  ca-certificates \
+  cmake \
+  curl \
+  fzf \
+  git \
+  jq \
+  ripgrep \
+  nodejs \
+  npm \
+  unzip \
+  && rm -rf /var/lib/apt/lists/*
+
+# --- Upstream Go 1.24.x (arch-aware) ---
+RUN set -eux; \
+  case "$(uname -m)" in \
+  x86_64|amd64) goarch=amd64 ;; \
+  aarch64|arm64) goarch=arm64 ;; \
+  *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;; \
+  esac; \
+  GO_VER="1.24.2"; \
+  curl -fsSL "https://go.dev/dl/go${GO_VER}.linux-${goarch}.tar.gz" -o /tmp/go.tgz; \
+  tar -C /usr/local -xzf /tmp/go.tgz; rm /tmp/go.tgz; \
+  go env GOTOOLCHAIN GOPROXY
+
+# ---- Install latest Neovim (official binary) ----
+RUN set -eux; \
+  arch="$(uname -m)"; case "$arch" in \
+  x86_64|amd64)  pkg="nvim-linux-x86_64.tar.gz" ;; \
+  aarch64|arm64) pkg="nvim-linux-arm64.tar.gz"  ;; \
+  *) echo "Unsupported arch: $arch" >&2; exit 1 ;; \
+  esac; \
+  curl -fsSL "https://github.com/neovim/neovim/releases/latest/download/${pkg}" -o /tmp/nvim.tgz; \
+  tar -C /usr/local -xzf /tmp/nvim.tgz; \
+  mv /usr/local/nvim-* /usr/local/nvim; \
+  ln -sfn /usr/local/nvim/bin/nvim /usr/local/bin/nvim; \
+  rm -f /tmp/nvim.tgz;
+
+RUN set -eux; \
+  case "$(uname -m)" in \
+  x86_64|amd64)  platform="Linux_x86_64" ;; \
+  aarch64|arm64) platform="Linux_arm64"  ;; \
+  *) echo "unsupported" >&2; exit 1 ;; \
+  esac; \
+  tag="$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | jq -r .tag_name)"; \
+  ver="${tag#v}"; \
+  curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/${tag}/lazygit_${ver}_${platform}.tar.gz" \
+  -o /tmp/lazygit.tgz; \
+  tar -C /usr/local/bin -xzf /tmp/lazygit.tgz lazygit; chmod +x /usr/local/bin/lazygit; rm /tmp/lazygit.tgz
+
+# Copy plugins
+RUN mkdir -p /root/.config/nvim
+WORKDIR /root/.config/nvim
+COPY init.lua init.lua
+COPY lua lua/
+
+# Install Nvim plugins
+RUN nvim --headless "+Lazy! sync" +qa || true
+
+# Install Mason plugins
+RUN nvim --headless "+MasonUpdate" \
+  "+MasonInstall pyright taplo gopls yaml-language-server helm-ls docker-compose-language-service dockerfile-language-server json-lsp markdown-oxide prettier stylua isort snyk" \
+  +qa || true
+
+FROM debian:bookworm-slim
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Stockholm
+ENV HOME=/root
+ENV PATH=/usr/local/go/bin:/root/.local/share/nvim/mason/bin:/usr/local/bin:/usr/bin:/bin
+ENV CI=true
+ENV MASON_OFF=1
+
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ca-certificates git ripgrep fzf \
+  nodejs npm \
+  python3 python3-venv python3-pip \
+  unzip \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/go /usr/local/go
+
+# Neovim + lazygit from builder
+COPY --from=builder /usr/local/nvim /usr/local/nvim
+RUN ln -sfn /usr/local/nvim/bin/nvim /usr/local/bin/nvim
+COPY --from=builder /usr/local/bin/lazygit /usr/local/bin/lazygit
+
+
+# Your config and installed plugins/tools (Mason & Lazy data)
+COPY --from=builder /root/.config/nvim /root/.config/nvim
+COPY --from=builder /root/.local/share/nvim /root/.local/share/nvim
+
+ENTRYPOINT [ "bash" ]
