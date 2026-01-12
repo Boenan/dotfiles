@@ -29,7 +29,7 @@ jobs:
       - name: Run Trivy for GitHub Security
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          image-ref: '${{ env.IMAGE_NAME }}:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
