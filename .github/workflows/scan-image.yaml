@@ -7,6 +7,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: "ghcr.io/boenan/dotfiles"
 
+permissions:
+  contents: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -19,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanners
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: '${{ env.IMAGE_NAME }}:latest'

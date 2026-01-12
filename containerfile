@@ -2,7 +2,7 @@ FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
 RUN pacman -Sy archlinux-keyring --noconfirm
 
-RUN pacman -Su --noconfirm \
+RUN pacman -Su --noconfirm --answerdiff None --answeredit None --answerupgrade None \
     libva-mesa-driver \
     intel-media-driver \
     vulkan-mesa-layers \
@@ -21,7 +21,7 @@ RUN pacman -Su --noconfirm \
     systemd \
     shellcheck \
     fuse-overlayfs && \
-  pacman -S --clean --clean && \
+  yes | pacman -Scc && \
   rm -rf /var/cache/podman/pkg/*
 
 
@@ -55,7 +55,6 @@ RUN yay -S --noconfirm \
     jq \
     yq \
     kubectl \
-    kubectx \
     istio \
     k9s \
     helm \
@@ -72,6 +71,9 @@ RUN yay -S --noconfirm \
     kubelogin \
     kubeseal
   
+RUN go install go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
+  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && \
+  mv ~/go/bin/kubectx ~/go/bin/kubens /usr/local/bin
 
 USER root
 WORKDIR /
