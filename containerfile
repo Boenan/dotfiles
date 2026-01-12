@@ -1,6 +1,7 @@
 FROM ghcr.io/ublue-os/arch-toolbox:20251106 AS builder
 
 RUN pacman -Sy archlinux-keyring --noconfirm
+RUN pacman -Su --noconfirm base-devel git wget go
 
 RUN wget -O yay.tar.gz https://github.com/Jguer/yay/releases/download/v12.5.7/yay_12.5.7_x86_64.tar.gz
 RUN tar -xvf yay.tar.gz
