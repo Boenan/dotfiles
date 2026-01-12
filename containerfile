@@ -2,7 +2,7 @@ FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
 RUN pacman -Sy archlinux-keyring --noconfirm
 
-RUN pacman -Su --noconfirm --noanswerclean --noanswerdiff --noansweredit --noanswerupgrade \
+RUN pacman -Su --noconfirm \
     libva-mesa-driver \
     intel-media-driver \
     vulkan-mesa-layers \
@@ -71,7 +71,7 @@ RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noansweru
     kubelogin \
     kubeseal
   
-RUN go install go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
+RUN go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
   go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && \
   mv ~/go/bin/kubectx ~/go/bin/kubens /usr/local/bin
 
