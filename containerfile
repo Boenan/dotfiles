@@ -1,6 +1,6 @@
 FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
-RUN pacman -Sy archlinux-keyring
+RUN pacman -Sy archlinux-keyring --noconfirm
 
 RUN pacman -Su --noconfirm \
     libva-mesa-driver \
