@@ -1,3 +1,63 @@
+FROM ghcr.io/ublue-os/arch-toolbox:20251106 AS builder
+
+RUN pacman -Sy archlinux-keyring --noconfirm
+RUN pacman -Su --noconfirm base-devel git wget go
+
+RUN wget -O yay.tar.gz https://github.com/Jguer/yay/releases/download/v12.5.7/yay_12.5.7_x86_64.tar.gz
+RUN tar -xvf yay.tar.gz
+RUN mv yay_12.5.7_x86_64/yay /usr/local/bin && rm yay.tar.gz && rm -rf yay_12.5.7_x86_64
+
+RUN useradd -m --shell=/bin/bash build && \
+  usermod -L build && \
+  echo "build ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+  echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+USER build
+
+WORKDIR /home/build
+RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noanswerupgrade \
+    git \
+    ghostty \
+    fish \
+    atuin \
+    starship \
+    tmux \
+    helix \
+    bat \
+    eza \
+    zoxide \
+    ripgrep \
+    fzf \
+    jujutsu \
+    jq \
+    yq \
+    kubectl \
+    istio \
+    k9s \
+    helm \
+    helmfile \
+    kustomize \
+    argocd \
+    gopls \
+    delve \
+    gofumpt \
+    yaml-language-server \
+    ttf-font-nerd \
+    bash-language-server \
+    python-lsp-server \
+    kubelogin \
+    kubeseal
+
+# Solve
+# CVE-2024-24790
+RUN go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
+  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5
+
+# RUN mv /home/build/go/bin/kubectx /usr/local/bin/ && \
+#     mv /home/build/go/bin/kubens /usr/local/bin/ && \
+#     mv /home/build/go/bin/host-spawn /usr/local/bin/ && \
+#     chmod +x /usr/local/bin/kubectx /usr/local/bin/kubens 
+
 FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
 RUN pacman -Sy archlinux-keyring --noconfirm
@@ -21,67 +81,14 @@ RUN pacman -Su --noconfirm \
     systemd \
     shellcheck \
     fuse-overlayfs && \
-  pacman -S --clean --clean && \
+  yes | pacman -Scc && \
   rm -rf /var/cache/podman/pkg/*
 
-
-RUN wget -O yay.tar.gz https://github.com/Jguer/yay/releases/download/v12.5.7/yay_12.5.7_x86_64.tar.gz
-RUN tar -xvf yay.tar.gz
-RUN mv yay_12.5.7_x86_64/yay /usr/local/bin && rm yay.tar.gz && rm -rf yay_12.5.7_x86_64
-
-RUN useradd -m --shell=/bin/bash build && \
-  usermod -L build && \
-  echo "build ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-  echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
-USER build
-
-
-WORKDIR /home/build
-RUN yay -S --noconfirm \
-    git \
-    ghostty \
-    fish \
-    atuin \
-    starship \
-    tmux \
-    helix \
-    bat \
-    eza \
-    zoxide \
-    ripgrep \
-    fzf \
-    jujutsu \
-    jq \
-    yq \
-    kubectl \
-    kubectx \
-    istio \
-    k9s \
-    helm \
-    helmfile \
-    kustomize \
-    argocd \
-    gopls \
-    delve \
-    gofumpt \
-    yaml-language-server \
-    ttf-font-nerd \
-    bash-language-server \
-    python-lsp-server \
-    kubelogin \
-    kubeseal
-  
-
-USER root
-WORKDIR /
-
-RUN userdel -r build && \
-  rm -drf /home/build && \
-  sed -i '/build ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers && \
-  sed -i '/root ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers && \
-  rm -rf /home/build/.cache/* && \
-  rm -rf /tmp/* /var/cache/podman/pkg/*
-  
-
+COPY --from=builder /usr/bin/ /usr/bin/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY --from=builder /home/build/go/bin/kubectx /usr/local/bin/
+COPY --from=builder /home/build/go/bin/kubens /usr/local/bin/
 COPY --chmod=777 . /dotfiles
+
+# Remove host-spawn, I do not use it
+RUN rm /usr/sbin/host-spawn

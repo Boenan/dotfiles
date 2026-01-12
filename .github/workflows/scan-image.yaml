@@ -5,20 +5,24 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: "ghcr.io/boenan/dotfiles"
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-push:
+  scan-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: write
       packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanners
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: '${{ env.IMAGE_NAME }}:latest'
@@ -29,7 +33,7 @@ jobs:
       - name: Run Trivy for GitHub Security
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          image-ref: '${{ env.IMAGE_NAME }}:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
