@@ -70,13 +70,17 @@ RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noansweru
     python-lsp-server \
     kubelogin \
     kubeseal
-  
+
+# Solve CVE-2024-24790  
 RUN go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
-  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && \
-  mv ~/go/bin/kubectx ~/go/bin/kubens /usr/local/bin
+  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && 
 
 USER root
 WORKDIR /
+
+RUN mv /home/build/go/bin/kubectx /usr/local/bin/ && \
+    mv /home/build/go/bin/kubens /usr/local/bin/ && \
+    chmod +x /usr/local/bin/kubectx /usr/local/bin/kubens
 
 RUN userdel -r build && \
   rm -drf /home/build && \
