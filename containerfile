@@ -1,6 +1,8 @@
-FROM ghcr.io/ublue-os/arch-toolbox:latest
+FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
-RUN pacman -Syu --noconfirm \
+RUN pacman -Sy archlinux-keyring
+
+RUN pacman -Su --noconfirm \
     libva-mesa-driver \
     intel-media-driver \
     vulkan-mesa-layers \
