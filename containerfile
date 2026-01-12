@@ -71,16 +71,22 @@ RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noansweru
     kubelogin \
     kubeseal
 
-# Solve CVE-2024-24790  
+# Solve
+# CVE-2024-24790
+# CVE-2025-58183
 RUN go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
-  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 
+  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && \
+  go install github.com/1player/host-spawn@v1.6.2 
 
 USER root
 WORKDIR /
 
+RUN rm /usr/sbin/host-spawn
+
 RUN mv /home/build/go/bin/kubectx /usr/local/bin/ && \
     mv /home/build/go/bin/kubens /usr/local/bin/ && \
-    chmod +x /usr/local/bin/kubectx /usr/local/bin/kubens
+    mv /home/build/go/bin/host-spawn /usr/local/bin/ && \
+    chmod +x /usr/local/bin/kubectx /usr/local/bin/kubens /usr/local/bin/host-spawn
 
 RUN userdel -r build && \
   rm -drf /home/build && \
