@@ -1,29 +1,6 @@
-FROM ghcr.io/ublue-os/arch-toolbox:20251106
+FROM ghcr.io/ublue-os/arch-toolbox:20251106 AS builder
 
 RUN pacman -Sy archlinux-keyring --noconfirm
-
-RUN pacman -Su --noconfirm \
-    libva-mesa-driver \
-    intel-media-driver \
-    vulkan-mesa-layers \
-    pipewire \
-    pipewire-pulse \
-    pipewire-alsa \
-    pipewire-jack \
-    wireplumber \
-    xdg-user-dirs \
-    noto-fonts-cjk \
-    noto-fonts-emoji \
-    ttf-nerd-fonts-symbols-common \
-    glibc-locales \
-    openssh \
-    podman \
-    systemd \
-    shellcheck \
-    fuse-overlayfs && \
-  yes | pacman -Scc && \
-  rm -rf /var/cache/podman/pkg/*
-
 
 RUN wget -O yay.tar.gz https://github.com/Jguer/yay/releases/download/v12.5.7/yay_12.5.7_x86_64.tar.gz
 RUN tar -xvf yay.tar.gz
@@ -35,7 +12,6 @@ RUN useradd -m --shell=/bin/bash build && \
   echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER build
-
 
 WORKDIR /home/build
 RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noanswerupgrade \
@@ -73,27 +49,45 @@ RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noansweru
 
 # Solve
 # CVE-2024-24790
-# CVE-2025-58183
 RUN go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
-  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && \
-  go install github.com/1player/host-spawn@v1.6.2 
+  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5
 
-USER root
-WORKDIR /
+# RUN mv /home/build/go/bin/kubectx /usr/local/bin/ && \
+#     mv /home/build/go/bin/kubens /usr/local/bin/ && \
+#     mv /home/build/go/bin/host-spawn /usr/local/bin/ && \
+#     chmod +x /usr/local/bin/kubectx /usr/local/bin/kubens 
 
-RUN rm /usr/sbin/host-spawn
+FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
-RUN mv /home/build/go/bin/kubectx /usr/local/bin/ && \
-    mv /home/build/go/bin/kubens /usr/local/bin/ && \
-    mv /home/build/go/bin/host-spawn /usr/local/bin/ && \
-    chmod +x /usr/local/bin/kubectx /usr/local/bin/kubens /usr/local/bin/host-spawn
+RUN pacman -Sy archlinux-keyring --noconfirm
 
-RUN userdel -r build && \
-  rm -drf /home/build && \
-  sed -i '/build ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers && \
-  sed -i '/root ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers && \
-  rm -rf /home/build/.cache/* && \
-  rm -rf /tmp/* /var/cache/podman/pkg/*
-  
+RUN pacman -Su --noconfirm \
+    libva-mesa-driver \
+    intel-media-driver \
+    vulkan-mesa-layers \
+    pipewire \
+    pipewire-pulse \
+    pipewire-alsa \
+    pipewire-jack \
+    wireplumber \
+    xdg-user-dirs \
+    noto-fonts-cjk \
+    noto-fonts-emoji \
+    ttf-nerd-fonts-symbols-common \
+    glibc-locales \
+    openssh \
+    podman \
+    systemd \
+    shellcheck \
+    fuse-overlayfs && \
+  yes | pacman -Scc && \
+  rm -rf /var/cache/podman/pkg/*
 
+COPY --from=builder /usr/bin/ /usr/bin/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY --from=builder /home/build/go/bin/kubectx /usr/local/bin/
+COPY --from=builder /home/build/go/bin/kubens /usr/local/bin/
 COPY --chmod=777 . /dotfiles
+
+# Remove host-spawn, I do not use it
+RUN rm /usr/sbin/host-spawn
