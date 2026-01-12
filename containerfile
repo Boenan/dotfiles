@@ -64,7 +64,11 @@ RUN yay -S --noconfirm \
     delve \
     gofumpt \
     yaml-language-server \
-    ttf-font-nerd
+    ttf-font-nerd \
+    bash-language-server \
+    python-lsp-server \
+    kubelogin \
+    kubeseal
   
 
 USER root
