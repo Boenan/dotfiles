@@ -1,12 +1,6 @@
 name: Build and Push Container Image
 
 on:
-  # push:
-  #   branches:
-  #     - main
-  #   paths:
-  #     - 'Containerfile'
-  #     - '.github/workflows/**'
   workflow_dispatch:
 
 env:
@@ -55,24 +49,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Basic scan with table output
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: 'ghcr.io/boenan/dotfiles:${{ steps.meta.outputs.tags }}'
-          format: 'table'
-          exit-code: '0'  # Don't fail the build
+      # # Basic scan with table output
+      # - name: Run Trivy vulnerability scanner
+      #   uses: aquasecurity/trivy-action@0.28.0
+      #   with:
+      #     image-ref: 'ghcr.io/boenan/dotfiles:${{ steps.meta.outputs.tags }}'
+      #     format: 'table'
+      #     exit-code: '0'  # Don't fail the build
 
-      # Scan for GitHub Security integration
-      - name: Run Trivy for GitHub Security
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: 'ghcr.io/boenan/dotfiles:${{ steps.meta.outputs.tags }}'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+      # # Scan for GitHub Security integration
+      # - name: Run Trivy for GitHub Security
+      #   uses: aquasecurity/trivy-action@0.28.0
+      #   with:
+      #     image-ref: 'ghcr.io/boenan/dotfiles:${{ steps.meta.outputs.tags }}'
+      #     format: 'sarif'
+      #     output: 'trivy-results.sarif'
+      #     severity: 'CRITICAL,HIGH'
 
-      - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+      # - name: Upload SARIF results
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: 'trivy-results.sarif'
