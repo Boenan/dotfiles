@@ -2,7 +2,7 @@ FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
 RUN pacman -Sy archlinux-keyring --noconfirm
 
-RUN pacman -Su --noconfirm --answerdiff None --answeredit None --answerupgrade None \
+RUN pacman -Su --noconfirm --noanswerclean --noanswerdiff --noansweredit --noanswerupgrade \
     libva-mesa-driver \
     intel-media-driver \
     vulkan-mesa-layers \
@@ -38,7 +38,7 @@ USER build
 
 
 WORKDIR /home/build
-RUN yay -S --noconfirm \
+RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noanswerupgrade \
     git \
     ghostty \
     fish \
