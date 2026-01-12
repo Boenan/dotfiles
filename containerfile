@@ -73,7 +73,7 @@ RUN yay -S --noconfirm --noanswerclean --noanswerdiff --noansweredit --noansweru
 
 # Solve CVE-2024-24790  
 RUN go install github.com/ahmetb/kubectx/cmd/kubectx@v0.9.5 && \
-  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 && 
+  go install github.com/ahmetb/kubectx/cmd/kubens@v0.9.5 
 
 USER root
 WORKDIR /
