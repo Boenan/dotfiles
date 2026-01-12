@@ -59,7 +59,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: 'ghcr.io/boenan/dockerfile:${{ github.sha }}'
+          image-ref: 'ghcr.io/boenan/dotfiles:${{ github.sha }}'
           format: 'table'
           exit-code: '0'  # Don't fail the build
 
@@ -67,7 +67,7 @@ jobs:
       - name: Run Trivy for GitHub Security
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: 'ghcr.io/boenan/dockerfile:${{ github.sha }}'
+          image-ref: 'ghcr.io/boenan/dotfiles:${{ github.sha }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
