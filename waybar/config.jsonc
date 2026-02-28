@@ -1,0 +1,186 @@
+// -*- mode: jsonc -*-
+{
+    // "layer": "top", // Waybar at top layer
+    // "position": "bottom", // Waybar position (top|bottom|left|right)
+    "height": 10, // Waybar height (to be removed for auto height)
+    // "width": 1280, // Waybar width
+    "spacing": 4, // Gaps between modules (4px)
+    "tooltip-delay": 10,
+    // Choose the order of the modules
+    "modules-left": [
+        "hyprland/workspaces",
+        "hyprland/window"
+    ],
+    "modules-right": [
+        "wireplumber",
+        "custom/separator",
+        "network",
+        "custom/separator",
+        "power-profiles-daemon",
+        "custom/separator",
+        "cpu",
+        "custom/separator",
+        "memory",
+        "custom/separator",
+        "temperature",
+        "custom/separator",
+        "battery",
+        "custom/separator",
+        "clock"
+    ],
+    "hyprland/window": {
+        "format": "{class}",
+        "rewrite": {
+            // CLI Apps (Matches the Title instead of the terminal's Class)
+            "nvim": "",
+            "vim": "",
+            "btop": "",
+            "yazi": "󰇥",
+
+            // Browsers
+            "firefox": "",
+            "google-chrome": "",
+            "chromium": "",
+            "brave-browser": "",
+
+            // Terminals
+            "foot": "",
+            "konsole": "",
+            "com.mitchellh.ghostty": "󰊠",
+            "ghostty": "󰊠",
+
+            // Social / Communication
+            "discord": "",
+            "WebCord": "",
+            "VencordDesktop": "",
+            "Slack": "",
+            "telegram-desktop": "",
+            "org.telegram.desktop": "",
+            "whatsapp-for-linux": "",
+            "Signal": "",
+
+            // Media
+            "Spotify": "",
+            "spotify": "",
+            "vlc": "󰕼",
+            "mpv": "",
+            "obs": "󰑋",
+
+            // Development / Editors
+            "code-oss": "󰨞",
+            "code": "󰨞",
+            "vscodium": "󰨞",
+            "jetbrains-idea": "",
+            "jetbrains-clion": "",
+            "jetbrains-pycharm": "󱔎",
+            "Emacs": "",
+
+            // File Managers
+            "thunar": "󰉋",
+            "org.gnome.Nautilus": "󰉋",
+            "org.kde.dolphin": "󰉋",
+            "nemo": "󰉋",
+
+            // Gaming
+            "Steam": "",
+            "steam": "",
+            "lutris": "󰊴",
+            "heroic": "󰊴",
+
+            // Utilities
+            "org.gnome.Settings": "",
+            "org.kde.systemsettings": "",
+            "pavucontrol": "󰕾",
+            "blueman-manager": ""
+        },
+        "separate-outputs": true
+    },
+    "tray": {
+        // "icon-size": 21,
+        "spacing": 10,
+        // "icons": {
+        //   "blueman": "bluetooth",
+        //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
+        // }
+    },
+    "clock": {
+        // "timezone": "America/New_York",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "format-alt": "{:%Y-%m-%d}"
+    },
+    "cpu": {
+        "format": "{usage}% ",
+        "tooltip": false
+    },
+    "memory": {
+        "format": "{}% "
+    },
+    "temperature": {
+        // "thermal-zone": 2,
+        // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+        "critical-threshold": 80,
+        // "format-critical": "{temperatureC}°C {icon}",
+        "format": "{temperatureC}°C",
+        "tooltip": false
+    },
+    "battery": {
+        "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{capacity}% {icon}",
+        "format-full": "{capacity}% {icon}",
+        "format-charging": "{capacity}% ",
+        "format-plugged": "{capacity}% ",
+        "format-alt": "{time} {icon}",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": ["", "", "", "", ""]
+    },
+    "battery#bat2": {
+        "bat": "BAT2"
+    },
+    "power-profiles-daemon": {
+      "format": "{icon}",
+      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+      "tooltip": true,
+      "format-icons": {
+        "default": "",
+        "performance": "",
+        "balanced": "",
+        "power-saver": ""
+      }
+    },
+    "network": {
+        // "interface": "wlp2*", // (Optional) To force the use of this interface
+        "format-wifi": "{essid} ({signalStrength}%) ",
+        "format-ethernet": "{ipaddr}/{cidr} 󰈁",
+        "tooltip-format": "{ifname} via {gwaddr}",
+        "format-linked": "{ifname} (No IP)",
+        "format-disconnected": "Disconnected  ",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}"
+    },
+    "wireplumber": {
+        "format": "{icon} {volume}%",
+        "format-muted": "",
+        "format-icons": ["", " ", " "],
+        "tooltip": false
+    },
+    "custom/media": {
+        "format": "{icon} {text}",
+        "return-type": "json",
+        "max-length": 40,
+        "format-icons": {
+            "spotify": "",
+            "default": "🎜"
+        },
+        "escape": true,
+        "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // Script in resources folder
+        // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+    },
+    "custom/separator": {
+        "format": "|",
+        "tooltip": false
+    }
+}
