@@ -1,6 +1,7 @@
 [[language]]
 name = "yaml"
 language-servers = ["yaml-language-server"]
+formatter = { command = "yamlfmt", args = ["-in"] }
 indent = { tab-width = 2, unit = "  " }  # The 'unit' string contains 4 actual spaces
 file-types = ["yaml", { glob = "**/templates/*.yaml" }]
 
