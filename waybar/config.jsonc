@@ -93,7 +93,8 @@
             "org.gnome.Settings": "",
             "org.kde.systemsettings": "",
             "pavucontrol": "󰕾",
-            "blueman-manager": ""
+            "blueman-manager": "",
+            "obsidian": ""
         },
         "separate-outputs": true
     },
