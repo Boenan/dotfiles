@@ -8,4 +8,5 @@ wezterm
 .gitignore
 brew.sh
 containerfile
+containerfile.bg
 README.md

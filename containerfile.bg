@@ -1,0 +1,88 @@
+FROM ghcr.io/ublue-os/arch-toolbox:20260331
+
+RUN pacman -Sy archlinux-keyring --noconfirm
+
+# Tools
+RUN pacman -Syu --noconfirm --needed \
+    atuin \
+    bat \
+    crun \
+    delve \
+    eza \
+    fish \
+    fuse-overlayfs \
+    fzf \
+    ghostty \ 
+    git \
+    glab \
+    glibc-locales \
+    gofumpt \
+    helix \
+    jq \
+    nickel \
+    nickel-docs \
+    openssh \
+    podman \
+    ripgrep \
+    shellcheck \
+    starship \
+    tmux \
+    unzip \
+    wget \
+    yq \
+    zoxide && \
+    pacman -S --clean --clean && \
+    rm -rf /var/cache/pacman/pkg/*
+
+# Kubernetes
+RUN pacman -Su --noconfirm \
+    kubectl \
+    istio \
+    k9s \
+    helm \
+    helmfile \
+    kustomize \
+    kubeseal \
+    kubectx \
+    kubens  \ 
+    argocd  && \
+    pacman -S --clean --clean && \
+    rm -rf /var/cache/pacman/pkg/*
+
+# Language servers
+RUN pacman -Su --noconfirm \
+    bash-language-server \
+    gopls \
+    nickel-language-server \
+    python-lsp-server \
+    vscode-json-languageserver \
+    yaml-language-server && \
+    pacman -S --clean --clean && \
+    rm -rf /var/cache/pacman/pkg/*
+
+# Create build user
+RUN useradd -m --shell=/bin/bash build && usermod -L build && \
+    echo "build ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+USER build
+WORKDIR /home/build
+
+RUN paru -S --noconfirm \
+    kubelogin \
+    oras
+
+USER root    
+WORKDIR /
+
+# Cleanup
+RUN userdel -r build && \
+    rm -drf /home/build && \
+    sed -i '/build ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers && \
+    sed -i '/root ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers && \
+    rm -rf /home/build/.cache/* && \
+    rm -rf \
+        /tmp/* \
+        /var/cache/pacman/pkg/*
+
+COPY --chmod=777 . /dotfiles
