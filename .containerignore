@@ -1,9 +1,12 @@
 .git
+.github
 aerospace
 asdf
+hypr
 nvim
 shell-scripts
 sketchybar
+walker
 wezterm
 .gitignore
 brew.sh

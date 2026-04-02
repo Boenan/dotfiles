@@ -2,6 +2,8 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end
 
+fish_add_path $HOME/.cargo/bin
+
 # zoxide
 zoxide init --cmd cd fish | source
 
