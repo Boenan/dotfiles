@@ -2,7 +2,7 @@
 
 DOTFILES_DIR=$(pwd)
 # DOT_CONFIG_FOLDERS="aerospace asdf fish ghostty helix k9s nvim"
-DOT_CONFIG_FOLDERS="aerospace fish ghostty helix k9s sketchybar starship tmux"
+DOT_CONFIG_FOLDERS="fish ghostty helix k9s starship tmux hypr waybar walker"
 DOT_CONFIG_HOME="$HOME/.config"
 
 for folder in $DOT_CONFIG_FOLDERS; do

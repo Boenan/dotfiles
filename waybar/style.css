@@ -1,0 +1,164 @@
+@define-color bg #272E33;
+@define-color fg #D3C6AA;
+@define-color red #e67e80;
+@define-color orange #e69875;
+@define-color yellow #dbbc7f;
+@define-color green #a7c080;
+@define-color blue #7fbbb3;
+@define-color purple #d699b6;
+@define-color aqua #83c092;
+
+* {
+    font-family: "Hack Nerd Font", FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+}
+
+window#waybar {
+    background-color: @bg;
+    border: none;
+    color: @fg;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/*
+window#waybar.empty {
+    background-color: transparent;
+}
+window#waybar.solo {
+    background-color: #FFFFFF;
+}
+*/
+
+window#waybar.termite {
+    background-color: transparent;
+}
+
+window#waybar.chromium {
+    background-color: transparent;
+    border: none;
+}
+
+@keyframes blink {
+    to {
+        color: @red;
+    }
+}
+
+#battery.critical:not(.charging) {
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: steps(12);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+button {
+    /* Use box-shadow instead of border so the text isn't offset */
+    box-shadow: inset 0 -3px transparent;
+    /* Avoid rounded borders under each button name */
+    border: none;
+    border-radius: 0;
+}
+
+/* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
+button:hover {
+    background: inherit;
+    box-shadow: inset 0 -3px @fg;
+}
+
+/* you can set a style on hover for any module like this */
+#workspaces button {
+    padding: 0 5px;
+    background-color: transparent;
+    color: @fg;
+}
+
+#workspaces button:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#workspaces button.focused, #workspaces button.active {
+    background-color: transparent;
+    box-shadow: inset 0 -3px @fg;
+}
+
+#workspaces button.urgent {
+    background-color: transparent;
+    color: @red;
+}
+
+#mode {
+    background-color: transparent;
+    box-shadow: inset 0 -3px @fg;
+}
+
+#custom-separator {
+    color: @fg;
+    padding: 0 1px;
+    opacity: 0.5;
+}
+
+#clock,
+#battery,
+#cpu,
+#memory,
+#disk,
+#temperature,
+#network,
+#bluetooth,
+#wireplumber,
+#custom-media,
+#mode,
+#power-profiles-daemon,
+#mpd {
+    padding: 0 6px;
+}
+
+#window,
+#workspaces {
+    margin: 0 4px;
+}
+
+/* If workspaces is the leftmost module, omit left margin */
+.modules-left > widget:first-child > #workspaces {
+    margin-left: 0;
+}
+
+/* If workspaces is the rightmost module, omit right margin */
+.modules-right > widget:last-child > #workspaces {
+    margin-right: 0;
+}
+
+#power-profiles-daemon {
+    /* padding-right: 15px; */
+}
+
+label:focus {
+    background-color: transparent;
+}
+
+#wireplumber:hover,
+#wireplumber button:hover,
+#temperature:hover {
+    background-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+#custom-media {
+    min-width: 100px;
+}
+
+#privacy {
+    padding: 0;
+}
+
+#privacy-item {
+    padding: 0 5px;
+    color: @fg;
+}

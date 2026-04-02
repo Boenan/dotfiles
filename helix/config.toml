@@ -1,4 +1,4 @@
-theme = "everforest_dark"
+theme = "everforest_dark_transparent"
 
 [editor]
 line-number = "relative"
