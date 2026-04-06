@@ -2,6 +2,15 @@ name: Scan Image
 
 on:
   workflow_dispatch:
+    inputs:
+      containerfile:
+        description: 'Image to scan (based on Containerfile)'
+        required: true
+        default: 'containerfile'
+        type: choice
+        options:
+          - containerfile
+          - containerfile.bg
 
 env:
   REGISTRY: ghcr.io
@@ -22,10 +31,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set suffix
+        id: vars
+        run: |
+          FILE="${{ inputs.containerfile }}"
+          if [[ "$FILE" == "containerfile" ]]; then
+            echo "suffix=" >> $GITHUB_OUTPUT
+          else
+            SUFFIX="${FILE#containerfile.}"
+            echo "suffix=${SUFFIX}-" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run Trivy vulnerability scanners
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: '${{ env.IMAGE_NAME }}:latest'
+          image-ref: '${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.suffix }}latest'
           format: 'table'
           exit-code: '0'  # Don't fail the build
 
@@ -33,7 +53,7 @@ jobs:
       - name: Run Trivy for GitHub Security
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: '${{ env.IMAGE_NAME }}:latest'
+          image-ref: '${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.suffix }}latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
