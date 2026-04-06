@@ -2,6 +2,15 @@ name: Build and Push Container Image
 
 on:
   workflow_dispatch:
+    inputs:
+      containerfile:
+        description: 'Containerfile to build'
+        required: true
+        default: 'containerfile'
+        type: choice
+        options:
+          - containerfile
+          - containerfile.bg
 
 env:
   REGISTRY: ghcr.io
@@ -29,44 +38,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set suffix
+        id: vars
+        run: |
+          FILE="${{ inputs.containerfile }}"
+          if [[ "$FILE" == "containerfile" ]]; then
+            echo "suffix=" >> $GITHUB_OUTPUT
+          else
+            SUFFIX="${FILE#containerfile.}"
+            echo "suffix=${SUFFIX}-" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
-            type=sha,format=short
+            type=raw,value=${{ steps.vars.outputs.suffix }}latest
+            type=raw,value=${{ steps.vars.outputs.suffix }}{{sha}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./containerfile
+          file: ./${{ inputs.containerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # # Basic scan with table output
-      # - name: Run Trivy vulnerability scanner
-      #   uses: aquasecurity/trivy-action@0.28.0
-      #   with:
-      #     image-ref: 'ghcr.io/boenan/dotfiles:${{ steps.meta.outputs.tags }}'
-      #     format: 'table'
-      #     exit-code: '0'  # Don't fail the build
-
-      # # Scan for GitHub Security integration
-      # - name: Run Trivy for GitHub Security
-      #   uses: aquasecurity/trivy-action@0.28.0
-      #   with:
-      #     image-ref: 'ghcr.io/boenan/dotfiles:${{ steps.meta.outputs.tags }}'
-      #     format: 'sarif'
-      #     output: 'trivy-results.sarif'
-      #     severity: 'CRITICAL,HIGH'
-
-      # - name: Upload SARIF results
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: 'trivy-results.sarif'
