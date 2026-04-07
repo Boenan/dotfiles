@@ -1,12 +1,6 @@
-FROM ghcr.io/ublue-os/arch-toolbox:20260331
+FROM ghcr.io/ublue-os/arch-toolbox:20251106
 
 RUN pacman -Sy archlinux-keyring --noconfirm
-
-# Intercept 'su' and strip the --pty flag so Distrobox 1.8.2.1 doesn't crash
-RUN sudo mv /usr/bin/su /usr/bin/su.orig && \
-    echo '#!/bin/bash' | sudo tee /usr/bin/su && \
-    echo 'args=("$@"); new_args=(); for arg in "${args[@]}"; do [ "$arg" != "--pty" ] && new_args+=("$arg"); done; exec /usr/bin/su.orig "${new_args[@]}"' | sudo tee -a /usr/bin/su && \
-    sudo chmod +x /usr/bin/su
 
 # Tools
 RUN pacman -Syu --noconfirm --needed \
@@ -83,9 +77,9 @@ RUN useradd -m --shell=/bin/bash build && usermod -L build && \
 USER build
 WORKDIR /home/build
 
-RUN paru -S --noconfirm \
-    kubelogin \
-    oras
+# RUN paru -S --noconfirm \
+#     kubelogin \
+#     oras
 
 USER root    
 WORKDIR /
