@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/arch-toolbox:20251106
+FROM ghcr.io/ublue-os/arch-toolbox:20260331
 
 RUN pacman -Sy archlinux-keyring --noconfirm
 
@@ -77,9 +77,9 @@ RUN useradd -m --shell=/bin/bash build && usermod -L build && \
 USER build
 WORKDIR /home/build
 
-# RUN paru -S --noconfirm \
-#     kubelogin \
-#     oras
+RUN paru -S --noconfirm \
+    kubelogin \
+    oras
 
 USER root    
 WORKDIR /
