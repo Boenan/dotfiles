@@ -1,4 +1,6 @@
-FROM ghcr.io/ublue-os/arch-toolbox:20260331
+FROM ghcr.io/ublue-os/arch-toolbox:20260215
+
+RUN sed -i 's/^#IgnorePkg.*/IgnorePkg = mesa llvm-libs/' /etc/pacman.conf
 
 RUN pacman -Sy archlinux-keyring --noconfirm
 

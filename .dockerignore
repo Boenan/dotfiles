@@ -7,9 +7,11 @@ nvim
 shell-scripts
 sketchybar
 walker
+waybay
 wezterm
 .gitignore
 brew.sh
 containerfile
 containerfile.bg
+.dockerignore
 README.md
