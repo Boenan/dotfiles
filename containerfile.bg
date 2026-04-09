@@ -8,6 +8,7 @@ RUN pacman -Sy archlinux-keyring --noconfirm
 RUN pacman -Syu --noconfirm --needed \
     atuin \
     bat \
+    broot \
     crun \
     delve \
     eza \

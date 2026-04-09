@@ -1,0 +1,103 @@
+# Everforest Dark skin for Broot
+# Based on the palette by Sainnhe Park: https://everforest.vercel.app/palette
+
+[skin]
+default = "#D3C6AA none / #9DA9A0 none"
+tree = "#7A8478 none / #7A8478 none"
+parent = "#859289 none / #7A8478 none"
+file = "#D3C6AA none / #9DA9A0 none"
+directory = "#7FBBB3 none Bold / #7FBBB3 none"
+exe = "#A7C080 none"
+link = "#D699B6 none"
+pruning = "#7A8478 none Italic"
+
+# Permissions
+perm__ = "#7A8478 none"
+perm_r = "#DBBC7F none"
+perm_w = "#E67E80 none"
+perm_x = "#A7C080 none"
+owner = "#9DA9A0 none"
+group = "#9DA9A0 none"
+
+# File properties
+count = "#D3C6AA #374145"
+dates = "#83C092 none"
+sparse = "#E69875 none"
+
+# Git Integration
+git_branch = "#A7C080 none"
+git_insertions = "#A7C080 none"
+git_deletions = "#E67E80 none"
+git_status_current = "#7A8478 none"
+git_status_modified = "#DBBC7F none"
+git_status_new = "#A7C080 none Bold"
+git_status_ignored = "#7A8478 none"
+git_status_conflicted = "#E67E80 none"
+git_status_other = "#E67E80 none"
+
+# Search and UI states
+selected_line = "none #374145 / none #2E383C"
+char_match = "#DBBC7F none Bold"
+file_error = "#E67E80 none"
+flag_label = "#9DA9A0 none"
+flag_value = "#D699B6 none Bold"
+input = "#D3C6AA none / #9DA9A0 #1E2326"
+
+# Status Line
+status_error = "#D3C6AA #493B40"
+status_job = "#D3C6AA #384B55"
+status_normal = "#D3C6AA #2E383C / #9DA9A0 #1E2326"
+status_italic = "#E69875 #2E383C / #9DA9A0 #1E2326"
+status_bold = "#E69875 #2E383C Bold / #9DA9A0 #1E2326"
+status_code = "#DBBC7F #2E383C / #9DA9A0 #1E2326"
+status_ellipsis = "#9DA9A0 #2E383C / #7A8478 #1E2326"
+
+# Command Purposes
+purpose_normal = "#D3C6AA #2E383C"
+purpose_italic = "#D699B6 #2E383C"
+purpose_bold = "#D699B6 #2E383C Bold"
+purpose_ellipsis = "#D3C6AA #2E383C"
+
+# Scrollbar
+scrollbar_track = "#2E383C none / #1E2326 none"
+scrollbar_thumb = "#7A8478 none / #272E33 none"
+
+# Help Screen
+help_paragraph = "#D3C6AA none"
+help_bold = "#E69875 none Bold"
+help_italic = "#E69875 none Italic"
+help_code = "#A7C080 #2E383C"
+help_headers = "#DBBC7F none"
+help_table_border = "#414B50 none"
+
+# Previews
+preview_title = "#D3C6AA #374145 / #9DA9A0 #2E383C"
+preview = "#D3C6AA #272E33 / #9DA9A0 #1E2326"
+preview_line_number = "#7A8478 #2E383C"
+preview_separator = "#374145 none / #2E383C none"
+preview_match = "none #4C3743"
+content_extract = "#D3C6AA none"
+content_match = "#E67E80 none"
+
+# Hex View
+hex_null = "#7A8478 none"
+hex_ascii_graphic = "#D3C6AA none"
+hex_ascii_whitespace = "#9DA9A0 none"
+hex_ascii_other = "#E69875 none"
+hex_non_ascii = "#E67E80 none"
+
+# Staging Area
+staging_area_title = "#D3C6AA #374145 / #9DA9A0 #2E383C"
+mode_command_mark = "#272E33 #E67E80 Bold"
+
+# Size / Clutter Scale (Green -> Yellow -> Orange -> Red)
+good_to_bad_0 = "#A7C080"
+good_to_bad_1 = "#83C092"
+good_to_bad_2 = "#7FBBB3"
+good_to_bad_3 = "#D699B6"
+good_to_bad_4 = "#DBBC7F"
+good_to_bad_5 = "#E69875"
+good_to_bad_6 = "#E67E80"
+good_to_bad_7 = "#E67E80"
+good_to_bad_8 = "#E67E80"
+good_to_bad_9 = "#E67E80"
