@@ -82,10 +82,16 @@ WORKDIR /home/build
 
 RUN paru -S --noconfirm \
     kubelogin \
+    kubectl-plugin \
     oras
 
 USER root    
 WORKDIR /
+
+# Autocomplete for kubectl_cnpg
+RUN echo '#!/usr/bin/env sh' > /usr/local/bin/kubectl_complete-cnpg && \
+    echo 'kubectl cnpg __complete "$@"' >> /usr/local/bin/kubectl_complete-cnpg && \
+    chmod +x /usr/loccal/bin/kubectl_complete-cnpg
 
 # Cleanup
 RUN userdel -r build && \
