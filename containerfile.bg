@@ -82,7 +82,7 @@ WORKDIR /home/build
 
 RUN paru -S --noconfirm \
     kubelogin \
-    kubectl-plugin \
+    kubectl-cnpg \
     oras
 
 USER root    
