@@ -13,5 +13,7 @@ wezterm
 brew.sh
 containerfile
 containerfile.bg
+containerfile.ubuntu
 .dockerignore
 README.md
+ubuntu-repo.md

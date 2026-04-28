@@ -11,6 +11,7 @@ on:
         options:
           - containerfile
           - containerfile.bg
+          - containerfile.ubuntu
 
 env:
   REGISTRY: ghcr.io

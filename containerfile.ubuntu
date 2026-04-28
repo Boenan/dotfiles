@@ -1,0 +1,150 @@
+FROM ubuntu:24.04
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install packages available in main repository
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    bind9-dnsutils \
+    ca-certificates \
+    curl \
+    fuse-overlayfs \
+    gnupg \
+    git \
+    gpg \
+    jq \
+    locales \
+    netcat-openbsd \
+    openssh-client \
+    sudo \
+    tar \
+    tmux \
+    unzip \
+    wget \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install packages available in universe repository
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bat \
+    bats \
+    crun \
+    fish \
+    fzf \
+    glab \
+    npm \
+    podman \
+    ripgrep \
+    wl-clipboard \
+    zoxide \
+    && rm -rf /var/lib/apt/lists/* \ 
+    && ln -s /usr/bin/batcat /usr/local/bin/bat
+
+# Add kubectl Ubuntu repository
+RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
+    && sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list \
+    && sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+
+# Add helm Ubuntu repository
+RUN curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null \
+    && echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+
+# Add Eza Ubuntu repository
+RUN wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list \
+    && sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+
+# Install packages in 3rd party repository with apt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    eza \
+    helm \
+    kubectl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install starship, available in univers at 25.04+
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# Install autin
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh -s -- --non-interactive
+
+# Install broot
+RUN wget https://github.com/Canop/broot/releases/download/v1.56.2/broot_1.56.2.zip \
+    && unzip broot_1.56.2.zip "x86_64-unknown-linux-gnu/*" \
+    && mv x86_64-unknown-linux-gnu/broot /usr/local/bin/broot \
+    && rm -rf x86_64-unknown-linux-gnu && rm broot_1.56.2.zip
+
+# Install yq
+RUN sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+    && chmod +x /usr/local/bin/yq
+
+# Install helix editor, available as PPA
+RUN wget https://github.com/helix-editor/helix/releases/download/25.07.1/helix-25.07.1-x86_64-linux.tar.xz \
+    && tar -xf helix-25.07.1-x86_64-linux.tar.xz \ 
+    && mv helix-25.07.1-x86_64-linux/hx /usr/local/bin/hx \
+    && mkdir /usr/lib/helix && mv helix-25.07.1-x86_64-linux/runtime /usr/lib/helix/runtime \
+    && rm -rf helix-25.07.1-x86_64-linux && rm helix-25.07.1-x86_64-linux.tar.xz
+
+# Install Nickel
+RUN wget -qO /usr/local/bin/nickel https://github.com/nickel-lang/nickel/releases/download/1.16.0/nickel-pkg-x86_64-linux \
+    && chmod +x /usr/local/bin/nickel \
+    && wget -qO /usr/local/bin/nls https://github.com/nickel-lang/nickel/releases/download/1.16.0/nls-x86_64-linux \
+    && chmod +x /usr/local/bin/nls
+
+# Install k9s
+RUN wget https://github.com/derailed/k9s/releases/latest/download/k9s_linux_amd64.deb \
+    && sudo apt install ./k9s_linux_amd64.deb \
+    && rm k9s_linux_amd64.deb
+
+# Install kubeseal
+RUN curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.36.6/kubeseal-0.36.6-linux-amd64.tar.gz" \
+    && tar -xvzf kubeseal-0.36.6-linux-amd64.tar.gz kubeseal \
+    && sudo install -m 755 kubeseal /usr/local/bin/kubeseal \
+    && rm kubeseal kubeseal-0.36.6-linux-amd64.tar.gz
+
+# Install ArgoCD cli
+RUN wget -qO /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 \
+    && chmod +x /usr/local/bin/argocd
+
+# Install istioctl
+RUN curl -L https://istio.io/downloadIstio | sh - \
+    && mv istio-*/bin/istioctl /usr/local/bin/ \
+    && rm -rf istio-*
+
+# Install kubelogin oidc
+RUN wget https://github.com/int128/kubelogin/releases/download/v1.36.1/kubelogin_linux_amd64.zip \
+    && unzip kubelogin_linux_amd64.zip "kubelogin" \
+    && mv kubelogin /usr/local/bin/kubectl-oidc_login \
+    && rm kubelogin_linux_amd64.zip
+
+# Install oras
+RUN wget https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz \
+    && tar -xf oras_1.3.2_linux_amd64.tar.gz oras \
+    && mv oras /usr/local/bin/ \
+    && rm oras_1.3.2_linux_amd64.tar.gz
+
+# Install kctx an alternative to kubectx and kubens
+RUN wget https://github.com/Boenan/kctx/releases/download/kctx-v0.2.0/kctx-linux-x86_64.tar.gz && \
+    tar -xf kctx-linux-x86_64.tar.gz && mv kctx /usr/local/bin && \
+    rm kctx-linux-x86_64.tar.gz
+
+ # Install realm
+RUN wget https://github.com/Boenan/realm/releases/download/realm-v0.2.1/realm-linux-x86_64.tar.gz && \
+    tar -xf realm-linux-x86_64.tar.gz && mv realm /usr/local/bin && \
+    rm realm-linux-x86_64.tar.gz
+ 
+# Install Language Servers
+RUN npm install -g \
+    bash-language-server \
+    vscode-langservers-extracted \
+    yaml-language-server
+
+# Install ghostty
+RUN apt-get update && \
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/1.3.1-0-ppa1/install.sh)" \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy local dotfiles
+COPY --chmod=777 . /dotfiles
+
