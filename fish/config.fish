@@ -1,15 +1,13 @@
 if status is-interactive
-    # Commands to run in interactive sessions can go here
+    # atuin
+    atuin init fish --disable-up-arrow | source
+    bind up history-search-backward
 end
 
 fish_add_path $HOME/.cargo/bin
 
 # zoxide
 zoxide init --cmd cd fish | source
-
-# atuin
-atuin init fish --disable-up-arrow | source
-bind up history-search-backward
 
 # starship
 starship init fish | source
