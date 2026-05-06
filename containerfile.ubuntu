@@ -68,10 +68,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
 
 # Install autin
-# RUN git clone https://github.com/atuinsh/atuin.git \
-#     && cd atuin/crates/atuin \
-#     && cargo install --path /usr/bin/local/ \
-#     && cd ../../.. && rm -rf autin
 RUN curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh -s -- --non-interactive \
     && mv /root/.atuin/bin/atuin /usr/local/bin/atuin
 
