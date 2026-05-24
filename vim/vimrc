@@ -1,0 +1,86 @@
+" ==========================================
+" 1. SYSTEM DEFAULTS & INTERFACE
+" ==========================================
+syntax on
+set termguicolors
+filetype plugin indent on
+set backspace=indent,eol,start
+set hlsearch
+set incsearch
+
+set number
+set relativenumber
+set scrolloff=8
+
+" ==========================================
+" 2. KEYMAPS & LEADER
+" ==========================================
+let mapleader = " "
+inoremap jk <Esc>
+
+" ==========================================
+" 3. TABS & INDENTATION
+" ==========================================
+set expandtab
+set softtabstop=4
+set shiftwidth=4
+set tabstop=4
+set autoindent
+set smartindent
+
+" ==========================================
+" FILETYPE SPECIFIC INDENTATION
+" ==========================================
+augroup filetype_indent
+    autocmd!
+    " YAML, HTML, CSS, and Markdown are strictly 2 spaces
+    autocmd FileType yaml,yml,html,css,markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
+
+    " Makefile requires REAL, physical tabs, not spaces!
+    autocmd FileType make setlocal noexpandtab tabstop=4 shiftwidth=4
+augroup END
+
+" ==========================================
+" 4. SEARCH & FILE MANAGEMENT
+" ==========================================
+set ignorecase
+set smartcase
+set nobackup
+set noswapfile
+
+if has('undofile')
+    set undofile
+endif
+
+" ==========================================
+" 5. WAYLAND CLIPBOARD COOPERATION
+" ==========================================
+set clipboard=unnamedplus
+
+" ==========================================
+" 6. THEME
+" ==========================================
+
+function! GiveMeTransparency()
+    " Clear the background colors for standard text, line numbers, and columns
+    highlight Normal guibg=NONE ctermbg=NONE
+    highlight NonText guibg=NONE ctermbg=NONE
+    highlight LineNr guibg=NONE ctermbg=NONE
+    highlight SignColumn guibg=NONE ctermbg=NONE
+    highlight EndOfBuffer guibg=NONE ctermbg=NONE
+    
+    " Optional: Makes the line your cursor is on slightly distinct but transparent
+    highlight CursorLine guibg=NONE ctermbg=NONE
+endfunction
+
+" Automatically apply transparency whenever a colorscheme loads
+augroup TransparentBackground
+    autocmd!
+    autocmd ColorScheme * call GiveMeTransparency()
+augroup END
+
+" For better and smoother scrolling performance
+let g:everforest_better_performance = 1
+
+packadd! everforest
+colorscheme everforest
