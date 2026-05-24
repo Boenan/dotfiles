@@ -18,8 +18,6 @@
         "custom/separator",
         "bluetooth",
         "custom/separator",
-        "power-profiles-daemon",
-        "custom/separator",
         "cpu",
         "custom/separator",
         "memory",
@@ -144,22 +142,13 @@
     "battery#bat2": {
         "bat": "BAT2"
     },
-    "power-profiles-daemon": {
-      "format": "{icon}",
-      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
-      "tooltip": true,
-      "format-icons": {
-        "default": "",
-        "performance": "",
-        "balanced": "",
-        "power-saver": ""
-      }
-    },
     "network": {
-        // "interface": "wlp2*", // (Optional) To force the use of this interface
+        "interval": 2, // Keeps speeds responsive
         "format-wifi": "{essid} ({signalStrength}%) ",
         "format-ethernet": "{ipaddr}/{cidr} 󰈁",
-        "tooltip-format": "{ifname} via {gwaddr}",
+        "tooltip-format-wifi": "  {essid} ({signalStrength}%)\n󰈀  Interface:\t{ifname}\n󰩟  IP Address:\t{ipaddr}\n󰇚  Download:\t{bandwidthDownBits}\n󰕒  Upload:\t{bandwidthUpBits}",
+        "tooltip-format-ethernet": "󰈀  Interface:\t{ifname}\n󰩟  IP Address:\t{ipaddr}\n󰇚  Download:\t{bandwidthDownBits}\n󰕒  Upload:\t{bandwidthUpBits}",
+        "tooltip-format-disconnected": "󰪎  Disconnected",
         "format-linked": "{ifname} (No IP)",
         "format-disconnected": "Disconnected  ",
         "format-alt": "{ifname}: {ipaddr}/{cidr}",

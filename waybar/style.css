@@ -162,3 +162,11 @@ label:focus {
     padding: 0 5px;
     color: @fg;
 }
+#tooltip {
+    background: @bg;
+    color: @fg;
+    border: 1px solid @blue;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+}

@@ -1,3 +1,4 @@
-alias kcn 'kctx cn'
-alias kcc 'kctx cc'
-alias ki 'kctx info'
+alias kcn 'kctx namespace'
+alias kcc 'kctx context'
+alias kci 'kctx info'
+alias kcd 'kctx delete'
