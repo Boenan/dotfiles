@@ -19,9 +19,9 @@ if command -v brew >/dev/null
     end
 end
 
-set -gx EDITOR helix
-set -gx VISUAL helix
-set -gx KUBE_EDITOR helix
+set -gx EDITOR vim
+set -gx VISUAL vim
+set -gx KUBE_EDITOR vim
 set -gx HELIX_RUNTIME "$HOME/.config/helix/runtime"
 set -gx STARSHIP_CONFIG "$HOME/.config/starship/starship.toml"
 
