@@ -29,7 +29,7 @@ set autoindent
 set smartindent
 
 " ==========================================
-" FILETYPE SPECIFIC INDENTATION
+" LSP Configuration
 " ==========================================
 augroup filetype_indent
     autocmd!
@@ -40,6 +40,12 @@ augroup filetype_indent
     autocmd FileType make setlocal noexpandtab tabstop=4 shiftwidth=4
 augroup END
 
+" Docker LSP for containerfile
+augroup containerfile_detection
+    autocmd!
+    " Match 'Containerfile' exactly, and 'Containerfile.<anything>'
+    autocmd BufRead,BufNewFile Containerfile,Containerfile.*,containerfile,containerfile.* set filetype=dockerfile
+augroup END
 " ==========================================
 " 4. SEARCH & FILE MANAGEMENT
 " ==========================================
@@ -60,7 +66,6 @@ set clipboard=unnamedplus
 " ==========================================
 " 6. THEME
 " ==========================================
-
 function! GiveMeTransparency()
     " Clear the background colors for standard text, line numbers, and columns
     highlight Normal guibg=NONE ctermbg=NONE
