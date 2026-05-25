@@ -81,7 +81,7 @@ hl.config({
         disable_hyprland_logo = false,
     },
     input = {
-        kb_layout = "us",
+        kb_layout = "us,se",
         kb_variant = "",
         kb_model = "",
         kb_rules = "",
@@ -140,7 +140,7 @@ hl.device({
 })
 hl.device({
     name = "at-translated-set-2-keyboard",
-    kb_layout = "us",
+    kb_layout = "us,se",
     kb_options = "ctrl:nocaps,ctrl:swap_lwin_lctl",
 })
 
@@ -188,8 +188,7 @@ hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ monitor = "+1" }))
 hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ monitor = "-1" }))
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.workspace.move({ monitor = "-1" }))
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.workspace.move({ monitor = "-1" }))
-
-hl.bind("SUPER + U", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_layout.sh"))
+hl.bind(mainMod .. " + SHIFT + U", hl.dsp.exec_cmd("hyprctl switchxkblayout current next"))
 
 -- Multimedia keys
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
