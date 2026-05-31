@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/arch-toolbox:20260530
+FROM ghcr.io/ublue-os/arch-toolbox:20260529
 
 RUN sed -i 's/^#IgnorePkg.*/IgnorePkg = mesa llvm-libs/' /etc/pacman.conf
 
