@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/arch-toolbox:20260215
+FROM ghcr.io/ublue-os/arch-toolbox:20260530
 
 RUN sed -i 's/^#IgnorePkg.*/IgnorePkg = mesa llvm-libs/' /etc/pacman.conf
 
@@ -70,7 +70,7 @@ RUN wget https://github.com/Boenan/realm/releases/download/realm-v0.2.1/realm-li
     rm realm-linux-x86_64.tar.gz
 
 # Install kctx cli tool
-RUN wget https://github.com/Boenan/kctx/releases/download/kctx-v0.1.1/kctx-linux-x86_64.tar.gz && \
+RUN wget https://github.com/Boenan/kctx/releases/download/kctx-v1.0.0/kctx-linux-x86_64.tar.gz && \
     tar -xf kctx-linux-x86_64.tar.gz && mv kctx /usr/local/bin && \
     rm kctx-linux-x86_64.tar.gz
 
