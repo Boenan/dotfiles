@@ -87,7 +87,6 @@ WORKDIR /home/build
 RUN paru -S --noconfirm \
     hubble-bin \ 
     kubelogin \
-    kubectl-cnpg \
     oras
 
 USER root    
