@@ -9,7 +9,9 @@ RUN pacman -Syu --noconfirm --needed \
     atuin \
     bat \
     bats \
+    bind-tools \ 
     broot \
+    cilium-cli \
     crun \
     delve \
     eza \
@@ -21,8 +23,8 @@ RUN pacman -Syu --noconfirm --needed \
     glab \
     glibc-locales \
     gofumpt \
-    helix \
     jq \
+    openbsd-netcat \
     nickel \
     nickel-docs \
     openssh \
@@ -34,7 +36,7 @@ RUN pacman -Syu --noconfirm --needed \
     unzip \
     vim \
     wget \
-    wl-clipboard \
+    xclip \
     yq \
     zoxide && \
     pacman -S --clean --clean && \
@@ -83,8 +85,8 @@ USER build
 WORKDIR /home/build
 
 RUN paru -S --noconfirm \
+    hubble-bin \ 
     kubelogin \
-    kubectl-cnpg \
     oras
 
 USER root    
