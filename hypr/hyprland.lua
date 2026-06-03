@@ -1,7 +1,7 @@
 ------------------
 ---- MONITORS ----
 ------------------
-hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = "auto" })
+hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = "auto", vrr = 1 })
 hl.monitor({ output = "desc:Dell Inc. AW3225QF 4S1BYZ3", mode = "3840x2160@120", position = "auto", scale = 2 })
 
 -------------------
@@ -186,7 +186,7 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 -- Monitor swapping configurations
 hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ monitor = "+1" }))
 hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ monitor = "-1" }))
-hl.bind(mainMod .. " + CTRL + L", hl.dsp.workspace.move({ monitor = "-1" }))
+hl.bind(mainMod .. " + CTRL + L", hl.dsp.workspace.move({ monitor = "+1" }))
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.workspace.move({ monitor = "-1" }))
 hl.bind(mainMod .. " + SHIFT + U", hl.dsp.exec_cmd("hyprctl switchxkblayout current next"))
 
@@ -207,8 +207,8 @@ hl.bind("Print", hl.dsp.exec_cmd("sh -c 'grim -g \"$(slurp)\" - | wl-copy'"))
 hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("killall -SIGUSR2 waybar"))
 hl.bind("SUPER + CTRL + Q", hl.dsp.exec_cmd("loginctl lock-session"))
 
-hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true })']]), { locked = true })
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = "auto", disabled = false })']]), { locked = true })
+hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd("hyprctl dispatch dpms off"), { locked = true })
+hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl dispatch dpms on"), { locked = true })
 --hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl keyword monitor eDP-1, preferred, auto, auto"), { locked = true })
 
 ----------------------

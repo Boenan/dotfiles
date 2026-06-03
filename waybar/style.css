@@ -134,10 +134,6 @@ button:hover {
     margin-right: 0;
 }
 
-#power-profiles-daemon {
-    /* padding-right: 15px; */
-}
-
 label:focus {
     background-color: transparent;
 }
