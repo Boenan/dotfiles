@@ -76,6 +76,10 @@ RUN wget https://github.com/Boenan/kctx/releases/download/kctx-v1.0.0/kctx-linux
     tar -xf kctx-linux-x86_64.tar.gz && mv kctx /usr/local/bin && \
     rm kctx-linux-x86_64.tar.gz
 
+RUN wget https://github.com/Boenan/autonp/releases/download/autonp-v0.3.0/autonp-linux-x86_64.tar.gz && \
+    tar -xf autonp-linux-x86_64.tar.gz && mv autonp /usr/local/bin && \
+    rm autonp-linux-x86_64.tar.gz
+
 # Create build user
 RUN useradd -m --shell=/bin/bash build && usermod -L build && \
     echo "build ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
