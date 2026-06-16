@@ -63,6 +63,18 @@ endif
 " ==========================================
 set clipboard=unnamedplus
 
+if executable('wl-copy') && executable('wl-paste')
+    " Hook into Vim's yank engine: The instant you hit 'y', shoot the text to wl-copy
+    autocmd TextYankPost * if v:event.operator == 'y' | call system('wl-copy', @") | endif
+
+    " Intercept 'p' and 'P' in normal mode to pull live text from the Wayland desktop
+    nnoremap p :let @"=substitute(system('wl-paste --no-newline'), "\r", '', 'g')<CR>p
+    nnoremap P :let @"=substitute(system('wl-paste --no-newline'), "\r", '', 'g')<CR>P
+
+    " Intercept 'p' in visual mode to replace selections seamlessly without losing registers
+    vnoremap p :<C-u>let @"=substitute(system('wl-paste --no-newline'), "\r", '', 'g')<CR>gv"_dP
+endif
+
 " ==========================================
 " 6. THEME
 " ==========================================

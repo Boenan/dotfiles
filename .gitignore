@@ -8,3 +8,4 @@ emacs/auto-save-list
 emacs/transient
 emacs/undo-fu-session
 custom.el
+vim/pack/colors/opt/everforest/after

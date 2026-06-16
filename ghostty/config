@@ -1,6 +1,6 @@
 command = fish --login --interactive
 theme = Everforest Dark Hard
-font-family = "Hack Nerd Font Monto"
+font-family = "Hack Nerd Font Mono"
 font-size = 10
 mouse-hide-while-typing = true
 copy-on-select = clipboard

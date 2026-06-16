@@ -1,0 +1,269 @@
+/* =============================================================================
+ * Everforest Dark Hard Color Palette
+ * ============================================================================= */
+@define-color bg-dim #1e2326;
+@define-color bg #1e2326;
+/*@define-color bg #333c43;*/ 
+@define-color bg-hover #2e383c;
+@define-color fg #d3c6aa;
+@define-color red #e67e80;
+@define-color orange #e69875;
+@define-color yellow #dbbc7f;
+@define-color green #a7c080;
+@define-color aqua #83c092;
+@define-color blue #7fbbb3;
+@define-color purple #d699b6;
+@define-color grey #859289;
+
+/* =============================================================================
+ * Universal Master Settings
+ * ============================================================================= */
+* {
+    font-family: 'Hack Nerd Font', 'Noto Sans Mono', monospace;
+    /* Master Control: Wayland scaling will automatically multiply this base value */
+    font-size: 11px; 
+    font-weight: bold;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: @bg-dim;
+    color: @fg;
+    margin: 0px;
+    border: none;
+    padding: 0px;
+}
+
+window#waybar > box {
+    margin: 0px;
+    padding: 0px;
+    border: none;
+}
+
+/* Base structural layout for all floating island pills */
+#workspaces, #mode, #scratchpad, #window, 
+#pulseaudio, #network, #power-profiles-daemon, 
+#cpu, #memory, #temperature, #backlight, #language, #battery, #clock, #tray, #mpd, #custom-media, #custom-power {
+    background-color: @bg;
+    color: @fg;
+    border-radius: 0.6em;   /* Scales roundness relative to font size */
+    padding: 0.2em 0.6em;   /* Scales inner padding relative to font size */
+    margin-bottom: 0;
+}
+
+/* =============================================================================
+ * Left Modules (Workspaces & Window Management)
+ * ============================================================================= */
+#workspaces {
+    padding: 0.1em 0.3em;
+}
+
+#workspaces button {
+    color: @grey;
+    border-radius: 0.5em;
+    padding: 0 0.4em;
+    margin: 0 0.2em;
+    transition: all 0.2s ease-in-out;
+}
+
+#workspaces button:hover {
+    background-color: @bg-hover;
+    color: @fg;
+}
+
+#workspaces button.focused, 
+#workspaces button.active {
+    background-color: @green;
+    color: @bg;
+}
+
+#workspaces button.urgent {
+    background-color: @red;
+    color: @bg;
+}
+
+#mode {
+    background-color: @orange;
+    color: @bg;
+}
+
+#scratchpad {
+    color: @purple;
+}
+
+#scratchpad.empty {
+    background-color: transparent;
+    padding: 0;
+}
+
+#window {
+    color: @blue;
+}
+
+/* =============================================================================
+ * Right Modules (System, Hardware, & Statuses)
+ * ============================================================================= */
+#cpu {
+    color: @red;
+}
+
+#memory {
+    color: @purple;
+}
+
+#temperature {
+    color: @orange;
+}
+
+#temperature.critical {
+    background-color: @red;
+    color: @bg;
+}
+
+#backlight {
+    color: @yellow;
+}
+
+#network {
+    color: @blue;
+}
+
+#network.disconnected {
+    color: @red;
+}
+
+#pulseaudio {
+    color: @yellow;
+}
+
+#pulseaudio.muted {
+    color: @grey;
+}
+
+#language, #keyboard-state {
+    color: @aqua;
+}
+
+#idle_inhibitor {
+    color: @grey;
+}
+
+#idle_inhibitor.activated {
+    color: @green;
+}
+
+/* -------------------------------------
+ * Battery & Power Profiles
+ * ------------------------------------- */
+#battery {
+    color: @green;
+}
+
+#battery.charging, 
+#battery.plugged {
+    color: @aqua;
+}
+
+@keyframes blink {
+    to {
+        background-color: @red;
+        color: @bg;
+    }
+}
+
+#battery.critical:not(.charging) {
+    background-color: @red;
+    color: @bg;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: steps(12);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+#power-profiles-daemon.performance {
+    color: @red;
+}
+
+#power-profiles-daemon.balanced {
+    color: @blue;
+}
+
+#power-profiles-daemon.power-saver {
+    color: @green;
+}
+
+/* -------------------------------------
+ * Media & Tray Layouts
+ * ------------------------------------- */
+#mpd {
+    color: @green;
+}
+
+#mpd.disconnected {
+    color: @red;
+}
+
+#mpd.stopped {
+    color: @grey;
+}
+
+#mpd.paused {
+    color: @orange;
+}
+
+#custom-media {
+    color: @aqua;
+}
+
+#clock {
+    color: @fg;
+}
+
+#tray {
+    padding: 0 0.5em;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: @red;
+}
+
+/* -------------------------------------
+ * Custom Floating Power Button
+ * ------------------------------------- */
+#custom-power {
+    color: @red;
+    font-size: 1.2em; /* Always scales to be exactly 20% larger than your system text */
+    padding: 0 0.8em;
+}
+
+/* =============================================================================
+ * GTK Dropdown Menu (Power Popup Theme)
+ * ============================================================================= */
+menu {
+    background-color: @bg;
+    color: @fg;
+    border: 0.15em solid @bg-hover;
+    border-radius: 0.8em;
+    padding: 0.5em;
+    margin: 0.4em;
+}
+
+menuitem {
+    color: @fg;
+    border-radius: 0.5em;
+    padding: 0.4em 1.5em;
+    transition: all 0.2s ease-in-out;
+}
+
+menuitem:hover {
+    background-color: @bg-hover;
+    color: @red;
+}
