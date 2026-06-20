@@ -61,7 +61,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
+ '(package-selected-packages
+   '(all-the-icons counsel doom-modeline doom-themes evil-collection
+		   general helpful hydra ivy-rich magit projectile
+		   treesit-auto)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -151,20 +154,23 @@
 (use-package general
   :config
   (general-create-definer boenan/leader-keys
-			  :keymaps '(normal insert visual emacs)
-			  :prefix "SPC"
-			  :global-prefix "C-SPC")
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  (general-def 'normal 'dired-mode-map
+    "SPC" nil)
 
   (boenan/leader-keys
-   "t" '(:ignore t :which-key "toggles")))
+    :keymaps 'dired-mode-map
+    "t" '(:ignore t :which-key "toggles")))
 
 (with-eval-after-load 'hydra
   (boenan/leader-keys
-    "s" '(hydra-text-scale/body :which-key "scale text")))
-
-(with-eval-after-load 'counsel
-  (boenan/leader-keys
-    "b" '(counsel-ibuffer :which-key "ibuffer")))
+    "b" '(counsel-ibuffer :which-key "ibuffer")
+    "t" '(hydra-text-scale/body :which-key "scale text")
+    "w w" '(mode-line-other-buffer :which-key "switch to last buffer")
+    "s" '(save-buffer :which-key "save buffer")))
 
 (use-package magit
   :config
@@ -185,3 +191,11 @@
     (setq projectile-project-search-path '("~/projects/boenan")))
   (setq projectile-switch-project-action #'projectile-dired)
   (projectile-discover-projects-in-search-path))
+
+(use-package treesit-auto
+  :ensure t
+  :custom
+  (treesit-auto-install 'prompt) ;; Prompts you to install if a grammar is missing
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
