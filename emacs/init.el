@@ -10,6 +10,7 @@
 (setq display-line-numbers-type 'relative) ; Display relative line numbers
 ;;(setq scroll-margin 5)
 (setq scroll-step 1)
+(winner-mode 1)
 
 ;; Disable line numbers in the following modes
 (add-hook 'term-mode-hook (lambda () (display-line-numbers-mode -1)))
@@ -158,20 +159,31 @@
     :prefix "SPC"
     :global-prefix "C-SPC")
 
-  (general-def 'normal 'dired-mode-map
-    "SPC" nil)
-
+  ;; 1. Define the menus (prefixes) first
   (boenan/leader-keys
-    :keymaps 'dired-mode-map
-    "t" '(:ignore t :which-key "toggles")))
+    "t" '(:ignore t :which-key "toggles")
+    "w" '(:ignore t :which-key "windows"))
 
-(with-eval-after-load 'hydra
+  ;; 2. Now define the actual commands using the menus created above
   (boenan/leader-keys
-    "b" '(counsel-ibuffer :which-key "ibuffer")
-    "f" '(counsel-find-file :which-key "find file")
-    "t" '(hydra-text-scale/body :which-key "scale text")
+    "t s" '(hydra-text-scale/body :which-key "scale text")
+    "b"   '(counsel-ibuffer :which-key "ibuffer")
+    "f"   '(counsel-find-file :which-key "find file")
+    "s"   '(save-buffer :which-key "save buffer")
+    
     "w w" '(mode-line-other-buffer :which-key "switch to last buffer")
-    "s" '(save-buffer :which-key "save buffer")))
+    "w l" '(evil-window-right :which-key "move cursor to right window")
+    "w h" '(evil-window-left :which-key "move cursor to left window")
+    "w j" '(evil-window-down :which-key "move cursor to down window")
+    "w k" '(evil-window-up :which-key "move cursor to up window")
+    "w v" '(evil-window-vsplit :which-key "split window vertical")
+    "w h" '(evil-window-split :which-key "split window horizontal")
+    "w m" '(delete-other-windows :which-key "maximize window")
+    "w u" '(winner-undo :which-key "undo window layout")
+    "w q" '(evil-window-delete :which-key "delete window"))
+
+  ;; Finally, clear SPC in dired so the global leader takes over
+  (general-def 'normal 'dired-mode-map "SPC" nil))
 
 (use-package magit
   :config
