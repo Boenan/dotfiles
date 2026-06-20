@@ -168,6 +168,7 @@
 (with-eval-after-load 'hydra
   (boenan/leader-keys
     "b" '(counsel-ibuffer :which-key "ibuffer")
+    "f" '(counsel-find-file :which-key "find file")
     "t" '(hydra-text-scale/body :which-key "scale text")
     "w w" '(mode-line-other-buffer :which-key "switch to last buffer")
     "s" '(save-buffer :which-key "save buffer")))

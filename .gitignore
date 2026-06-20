@@ -2,9 +2,14 @@
 .config/tfenv
 .config/exercism
 helix/.config/helix/runtime/**/*
+emacs/auto-save-list
 emacs/eln-cache
 emacs/elpa
-emacs/auto-save-list
+emacs/eshell
+emacs/projectile-bookmarks.eld
+emacs/projects
+emacs/recentf
+emacs/tramp
 emacs/transient
 emacs/undo-fu-session
 custom.el
