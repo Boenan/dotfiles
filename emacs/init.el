@@ -1,141 +1,187 @@
-;; ==========================================
-;; 1. SYSTEM DEFAULTS & INTERFACE
-;; ==========================================
-(setq inhibit-startup-screen t)         ; Disable welcome screen
-(menu-bar-mode -1)                      ; Disable top menu bar
-(tool-bar-mode -1)                      ; Disable graphical icon bar
-(setq global-hl-line-mode t)            ; Highlight current line (set cursorline)
+(setq inhibit-startup-message t)
 
-;; Line Numbers (set number, set relativenumber)
-(global-display-line-numbers-mode 1)
-(setq display-line-numbers-type 'relative) 
+(scroll-bar-mode -1)   ; Disable visible scrollbar
+(tool-bar-mode -1)     ; Disable the toolbar
+(tooltip-mode -1)      ; Disable tooltips
+(set-fringe-mode 10)   ; Give some breathing room
+(menu-bar-mode -1)     ; Disable the menu bar
+(column-number-mode)   ; Enable column numbers mode
+(global-display-line-numbers-mode 1)       ; Display line numbers
+(setq display-line-numbers-type 'relative) ; Display relative line numbers
+;;(setq scroll-margin 5)
+(setq scroll-step 1)
 
-;; Scrolling (set scrolloff=8)
-(setq scroll-margin 8
-      scroll-conservatively 101)        ; Smooth scrolling performance
+;; Disable line numbers in the following modes
+(add-hook 'term-mode-hook (lambda () (display-line-numbers-mode -1)))
+(add-hook 'shell-mode-hook (lambda () (display-line-numbers-mode -1)))
+(add-hook 'eshell-mode-hook (lambda () (display-line-numbers-mode -1)))
+(add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1)))
 
-;; ==========================================
-;; 2. PACKAGE MANAGER SETUP
-;; ==========================================
+(set-face-attribute 'default nil :font "Hack Nerd Font Mono" :height 150)
+;; Set theme
+;;(load-theme 'wombat)
+
+;; Set ESC quit prompt
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Init package source
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+			 ("org" . "https://orgmode.org/elpa/")
+			 ("elpa" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
 
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
-(eval-when-compile (require 'use-package))
+(require 'use-package)
 (setq use-package-always-ensure t)
 
-;; ==========================================
-;; 3. VIM EMULATION (EVIL MODE) & LEADER
-;; ==========================================
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+	 :map ivy-minibuffer-map
+	 ("TAB" . ivy-alt-done)
+	 ("C-l" . ivy-alt-done)
+	 ("C-j" . ivy-next-line)
+	 ("C-k" . ivy-previous-line)
+	 :map ivy-switch-buffer-map
+	 ("C-k" . ivy-previous-line)
+	 ("C-l" . ivy-done)
+	 ("C-d" . ivy-switch-buffer-kill)
+	 :map ivy-reverse-i-search-map
+	 ("C-k" . ivy-previous-line)
+	 ("C-d" . ivy-reverse-i-search-kill))
+  :config
+  (ivy-mode 1))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(use-package swiper
+  :after ivy)
+
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+	 ("C-x b" . counsel-ibuffer)
+	 ("C-x C-f" . counsel-find-file)
+	 :map minibuffer-local-map
+	 ("C-r" . counsel-minibuffer-history))
+  :after ivy
+  :config
+  (setq ivy-initial-inputs-alist nil) ; Don't start search with ^
+  (counsel-mode 1))
+
+;; After installing this package run: M-x all-the-icons-install-fonts
+(use-package all-the-icons)
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+  :config ())
+
+(add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
+(use-package doom-themes
+  :init (load-theme 'doom-everforest-hard t))
+
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 0.3))
+
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+
 (use-package evil
   :init
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
-  (setq evil-undo-system 'undo-redo)     ; Modern Vim undo/redo setup
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)
   :config
   (evil-mode 1)
-  
-  ;; Set Leader Key (let mapleader = " ")
-  (evil-set-leader 'normal (kbd "SPC"))
-  
-  ;; Quick Escape Chord (inoremap jk <Esc>)
-  (use-package evil-escape
-    :config
-    (evil-escape-mode 1)
-    (setq-default evil-escape-key-sequence "jk")
-    (setq-default evil-escape-delay 0.15)))
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
 
+  ;; Use visual line motions outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal)
+  (setq evil-scroll-margin 4)
+  (setq evil-scroll-preserve-screen-position t))
+  
 (use-package evil-collection
   :after evil
   :config
+  (setq evil-collection-mode-list
+	'(dired magit))
   (evil-collection-init))
 
-;; ==========================================
-;; 4. TABS, INDENTATION & LSP LANGUAGES
-;; ==========================================
-(setq-default indent-tabs-mode nil)     ; set expandtab
-(setq-default tab-width 4)              ; set tabstop=4
-(electric-pair-mode 1)                  ; Auto-close brackets () [] {}
-
-;; Filetype Hooks (augroup filetype_indent)
-(defun my/set-two-space-indent ()
-  (setq-local tab-width 2))
-
-(defun my/set-physical-tabs ()
-  (setq-local indent-tabs-mode t)       ; set noexpandtab
-  (setq-local tab-width 4))
-
-;; YAML, HTML, CSS, Markdown -> 2 spaces
-(add-hook 'yaml-mode-hook #'my/set-two-space-indent)
-(add-hook 'html-mode-hook #'my/set-two-space-indent)
-(add-hook 'css-mode-hook #'my/set-two-space-indent)
-(add-hook 'markdown-mode-hook #'my/set-two-space-indent)
-
-;; Makefiles require real tabs
-(add-hook 'makefile-mode-hook #'my/set-physical-tabs)
-
-;; Containerfile Association (augroup containerfile_detection)
-(add-to-list 'auto-mode-alist '("Containerfile\\'" . dockerfile-mode))
-(add-to-list 'auto-mode-alist '("Containerfile\\..*\\'" . dockerfile-mode))
-(add-to-list 'auto-mode-alist '("containerfile\\'" . dockerfile-mode))
-(add-to-list 'auto-mode-alist '("containerfile\\..*\\'" . dockerfile-mode))
-
-;; ==========================================
-;; 5. SEARCH & FILE MANAGEMENT
-;; ==========================================
-(setq case-fold-search t)               ; set ignorecase
-(setq evil-smartcase t)                 ; set smartcase
-(setq make-backup-files nil)            ; set nobackup
-(setq auto-save-default nil)            ; set noswapfile
-
-;; Persistent Undo history (if has('undofile'))
-(use-package undo-fu-session
+(use-package hydra
+  :ensure t
   :config
-  (global-undo-fu-session-mode))
+  (defhydra hydra-text-scale (:timeout 4)
+    ("j" text-scale-increase "in")
+    ("k" text-scale-decrease "out")
+    ("f" nil "finsihed" :exit t)))
 
-;; ==========================================
-;; 6. WAYLAND CLIPBOARD COOPERATION
-;; ==========================================
-;; Intercept Emacs kill/yank rings and pipe them through wl-copy and wl-paste
-(setq select-enable-clipboard t)
+(use-package general
+  :config
+  (general-create-definer boenan/leader-keys
+			  :keymaps '(normal insert visual emacs)
+			  :prefix "SPC"
+			  :global-prefix "C-SPC")
 
-(defun my/wl-copy (text)
-  (let ((process-connection-type nil))
-    (let ((proc (start-process "wl-copy" nil "wl-copy")))
-      (process-send-string proc text)
-      (process-send-eof proc))))
+  (boenan/leader-keys
+   "t" '(:ignore t :which-key "toggles")))
 
-(defun my/wl-paste ()
-  (if (and (executable-find "wl-paste")
-           (not (string= (buffer-name) " *Echo Area*")))
-      (shell-command-to-string "wl-paste --no-newline")))
+(with-eval-after-load 'hydra
+  (boenan/leader-keys
+    "s" '(hydra-text-scale/body :which-key "scale text")))
 
-;; Bind these functions to Emacs' clipboard hooks
-(setq interprogram-cut-function 'my/wl-copy)
-(setq interprogram-paste-function 'my/wl-paste)
-;; =========================================
-;; ==========================================
-;; 7. HIGH-RESOLUTION TYPOGRAPHY & THEME
-;; ==========================================
-(defun my/set-font ()
-  (set-frame-font "InputMono Nerd Font 13" nil t))
-(my/set-font)
-(add-hook 'server-after-make-frame-hook 'my/set-font)
+(with-eval-after-load 'counsel
+  (boenan/leader-keys
+    "b" '(counsel-ibuffer :which-key "ibuffer")))
 
-;; Cloned Everforest theme path setup
-(add-to-list 'custom-theme-load-path "~/.config/emacs/everforest-theme")
-(load-theme 'everforest-hard-dark t)
+(use-package magit
+  :config
+  (evil-set-initial-state 'magit-status-mode 'normal)
+  (evil-set-initial-state 'magit-diff-mode 'normal)
+  (evil-set-initial-state 'magit-log-mode 'normal)
+  (evil-set-initial-state 'magit-revision-mode 'normal))
 
-;; Transparency Tweak (function! GiveMeTransparency())
-(defun my/apply-transparency ()
-  (set-face-background 'default "unspecified-bg")
-  (set-face-background 'line-number "unspecified-bg")
-  (set-face-background 'line-number-current-line "unspecified-bg"))
-
-;; Force terminal transparency execution
-(unless (display-graphic-p)
-  (my/apply-transparency))
+(use-package projectile
+  :ensure t
+  :after evil
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/projects")
+    (setq projectile-project-search-path '("~/projects/boenan")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  (projectile-discover-projects-in-search-path))
