@@ -75,3 +75,5 @@
 ;; they are implemented.
 
 (setq projectile-project-search-path '("~/projects/boenan/"))
+(after! projectile
+  (setq projectile-switch-project-action #'projectile-dired))
