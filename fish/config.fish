@@ -5,6 +5,7 @@ if status is-interactive
 end
 
 fish_add_path $HOME/.cargo/bin
+fish_add_path $HOME/.emacs.d/bin
 
 # zoxide
 zoxide init --cmd cd fish | source
