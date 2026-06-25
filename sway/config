@@ -40,6 +40,7 @@ output * bg /usr/share/backgrounds/default.jxl fill
 output eDP-1 scale 1.25
 # Alienware screen
 output DP-6 mode 3840x2160@120Hz position 0 0 scale 2
+output DP-7 mode 3840x2160@120Hz position 0 0 scale 2
 # BG Lenovo screen
 output DP-2 mode 3440x1440@60Hz position 0 0 scale 1.25
 
@@ -64,8 +65,9 @@ bindswitch lid:off output eDP-1 enable
 # You can get the names of your inputs by running: swaymsg -t get_inputs
 # Read `man 5 sway-input` for more information about this section.
 
+
 input type:keyboard {
-    repeat_delay 250
+    repeat_delay 200
     repeat_rate 40
 }
 
@@ -202,6 +204,9 @@ input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
     # Show the next scratchpad window or hide the focused scratchpad window.
     # If there are multiple scratchpad windows, this command cycles through them.
     bindsym $mod+minus scratchpad show
+
+    # toggle waybar
+    bindsym $mod+Shift+W exec killall -SIGUSR1 waybar
 #
 # Resizing containers:
 #

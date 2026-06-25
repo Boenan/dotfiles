@@ -32,11 +32,11 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-everforest-hard)
+(setq doom-theme 'doom-material-dark)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
-;; numbers are disabled. For relative line numbers, set this to `relative'.
-(setq display-line-numbers-type t)
+;; numbers are disabled. For relrtive line numbers, set this to `relative'.
+(setq display-line-numbers-type 'relative)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -75,5 +75,29 @@
 ;; they are implemented.
 
 (setq projectile-project-search-path '("~/projects/boenan/"))
+
 (after! projectile
   (setq projectile-switch-project-action #'projectile-dired))
+
+(setq vterm-shell (executable-find "fish"))
+(setq shell-file-name (executable-find "fish"))
+(setq-hook! 'vterm-mode-hook vterm-shell (executable-find "fish"))
+(setq dired-listing-switches "-agho --group-directories-first")
+(setq doom-font (font-spec :family "Hack Nerd Font" :size 12))
+(add-hook! '(yaml-mode-hook yaml-ts-mode-hook) #'indent-bars-mode)
+
+;; turn off automatic completion popups in YAML files
+(add-hook! '(yaml-mode-hook yaml-ts-mode-hook)
+  (setq-local corfu-auto nil))
+
+;; Disable code actions only for rust-mode
+(add-hook 'rust-mode-hook
+          (lambda ()
+            (setq-local eglot-ignored-server-capabilities '(:codeActionProvider))))
+
+
+(after! org
+       (doom-themes-org-config)
+       (setq org-hide-emphasis-markers t
+             org-hide-leading-stars t
+             org-pretty-entities t))
