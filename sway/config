@@ -42,7 +42,7 @@ output eDP-1 scale 1.25
 output DP-6 mode 3840x2160@120Hz position 0 0 scale 2
 output DP-7 mode 3840x2160@120Hz position 0 0 scale 2
 # BG Lenovo screen
-output DP-2 mode 3440x1440@60Hz position 0 0 scale 1.25
+output DP-2 mode 3440x1440@60Hz position 0 0 scale 1.5
 
 # Clamshell mode
 bindswitch lid:on output eDP-1 disable
@@ -207,6 +207,9 @@ input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
 
     # toggle waybar
     bindsym $mod+Shift+W exec killall -SIGUSR1 waybar
+
+    # Print screen
+    bindsym $mod+Shift+p exec grimshot save area
 #
 # Resizing containers:
 #
