@@ -35,7 +35,7 @@ smart_borders on
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # Requires: desktop-backgrounds-compat, swaybg, jxl-pixbuf-loader
 # You can get the names of your outputs by running: swaymsg -t get_outputs
-output * bg /usr/share/backgrounds/default.jxl fill
+output * bg ~/Pictures/snowy_mountain.jpg fill
 # Thinkpad screen
 output eDP-1 scale 1.25
 # Alienware screen
@@ -45,8 +45,8 @@ output DP-7 mode 3840x2160@120Hz position 0 0 scale 2
 output DP-2 mode 3440x1440@60Hz position 0 0 scale 1.5
 
 # Clamshell mode
-bindswitch lid:on output eDP-1 disable
-bindswitch lid:off output eDP-1 enable
+bindswitch --reload --locked lid:on  output eDP-1 disable
+bindswitch --reload --locked lid:off output eDP-1 enable
 
 ### Idle configuration
 #
