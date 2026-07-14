@@ -211,11 +211,8 @@ input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
     # Print screen
     bindsym $mod+Shift+p exec grimshot save area
 
-    # Add new 80% floating toggle
-    bindsym $mod+Shift+z exec \
-        swaymsg floating enable; \
-        swaymsg resize set width 80% height 80%; \
-        swaymsg move position center
+    # Toggle floating and size to 80% of the screen, centered
+    bindsym $mod+Shift+z floating toggle, resize set width 90 ppt height 90 ppt, move position center
 #
 # Resizing containers:
 #
