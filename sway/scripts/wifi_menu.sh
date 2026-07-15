@@ -3,8 +3,10 @@
 # Everforest-themed rofi Wi-Fi menu (NetworkManager via nmcli).
 # - Lists nearby networks, connect (prompts for password when needed).
 # - Toggle Wi-Fi radio, rescan, open the advanced connection editor.
-# - Runs rofi on the X11 backend so "click outside to close" works (see
-#   power_menu.sh for the why). Toggles shut on a second invocation.
+# - Runs rofi on the native Wayland (layer-shell) backend so it stays crisp on
+#   scaled HiDPI outputs, with hover-select + single-click activation (see
+#   power_menu.sh). Click-outside-to-dismiss does not work under sway's
+#   layer-shell; close with Escape or re-invoke to toggle it shut.
 # Invoked by the "network-settings" block click in statusbar.sh.
 # =============================================================================
 
@@ -47,9 +49,9 @@ element-text { text-color: inherit; }
 '
 
 rofi_menu() {  # $1 = prompt ; reads entries on stdin ; prints selected index
-    WAYLAND_DISPLAY= DISPLAY="${DISPLAY:-:0}" \
-        rofi -dmenu -i -p "$1" -font "Hack Nerd Font 12" -click-to-exit \
-             -format 'i' -theme-str "$theme" &
+    rofi -dmenu -i -p "$1" -font "Hack Nerd Font 12" -click-to-exit \
+         -hover-select -me-select-entry "" -me-accept-entry "MousePrimary" \
+         -format 'i' -theme-str "$theme" &
     rpid=$!
     echo "$rpid" > "$PIDFILE"
     wait "$rpid"
@@ -110,8 +112,7 @@ case "$action" in
                 notify "Failed to connect" "$ssid"
             fi
         elif [ "$sec" = 1 ]; then
-            pw=$(printf '' | WAYLAND_DISPLAY= DISPLAY="${DISPLAY:-:0}" \
-                 rofi -dmenu -password -p "Password" -mesg "Password for $ssid" \
+            pw=$(printf '' | rofi -dmenu -password -p "Password" -mesg "Password for $ssid" \
                       -click-to-exit -theme-str "$theme")
             [ -z "$pw" ] && exit 0
             if nmcli device wifi connect "$ssid" password "$pw" >/dev/null 2>&1; then

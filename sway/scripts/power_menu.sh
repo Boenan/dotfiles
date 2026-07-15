@@ -2,13 +2,16 @@
 # =============================================================================
 # Everforest-themed rofi power dropdown (top-right, under the power button).
 #
-# Runs rofi on its X11 (XWayland) backend on purpose: rofi's "click outside to
-# close" relies on a global pointer grab, which works under X11 but not the
-# Wayland layer-shell backend. XWayland renders crisply here and gives us real
-# click-outside dismissal.
+# Runs rofi on its native Wayland (layer-shell) backend so it renders crisply
+# at the output's fractional scale -- the XWayland backend gets bitmap-upscaled
+# on HiDPI/scaled outputs, which looks blurry and oversized.
 #
-# Also toggles: invoking it again while open closes it (pidfile guard), so a
-# second click on the swaybar power button hides the menu.
+# Mouse: -hover-select highlights the row under the cursor and -me-accept-entry
+# MousePrimary makes a single left-click activate it (rofi's defaults need a
+# double-click). Note -click-to-exit (click outside to dismiss) does NOT work
+# under sway's layer-shell -- the compositor routes outside clicks to the window
+# beneath, so rofi never sees them. Close with Escape, or re-click the swaybar
+# power button: invoking this again while open closes it (pidfile guard).
 # =============================================================================
 
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/power_menu.pid"
@@ -75,10 +78,10 @@ element selected {
 element-text { text-color: inherit; }
 '
 
-# ---- Launch on the X11 backend (backgrounded so we can record rofi's PID) -----
+# ---- Launch on the Wayland backend (backgrounded so we can record rofi's PID) -
 out=$(mktemp)
-WAYLAND_DISPLAY= DISPLAY="${DISPLAY:-:0}" \
-    rofi -dmenu -i -p "Power" -font "Hack Nerd Font 12" -click-to-exit -theme-str "$theme" \
+rofi -dmenu -i -p "Power" -font "Hack Nerd Font 12" -click-to-exit \
+    -hover-select -me-select-entry "" -me-accept-entry "MousePrimary" -theme-str "$theme" \
     < <(printf '%s\n' "$lock" "$logout" "$suspend" "$hibernate" "$reboot" "$shutdown") \
     > "$out" 2>/dev/null &
 rpid=$!
