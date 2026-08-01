@@ -101,3 +101,36 @@
        (setq org-hide-emphasis-markers t
              org-hide-leading-stars t
              org-pretty-entities t))
+
+;; Comment code
+(map! :leader "v c" #'comment-line)
+
+;; Smart tab: when point sits inside a delimiter pair, jump past the next
+;; closing delimiter or quote on the current line. Otherwise fall back to the
+;; normal TAB behaviour (indentation / completion) so editing still works.
+(defun my/smart-tab ()
+  "Jump past the next closing delimiter or quote on the current line.
+Stops after any of: ) ] } > \" '  If none is found ahead on the line,
+run the usual TAB command instead."
+  (interactive)
+  (let ((eol (line-end-position))
+        (target nil))
+    (when (< (point) eol)  ; only search if not already at end of line
+      (save-excursion
+        (when (re-search-forward "[])}>\"']" eol t)
+          (setq target (point)))))  ; point lands just after the delimiter
+    (if target
+        (goto-char target)
+      (indent-for-tab-command))))
+
+(define-key evil-insert-state-map (kbd "TAB") #'my/smart-tab)
+
+;; Normal-mode indenting: TAB shifts the current line right, Shift-TAB left.
+;; Uses Evil's built-in line-wise shift commands (same as >> and <<), which
+;; respect shiftwidth/tab-width and accept a count.
+;; In visual mode, shift the whole selection and keep it selected so you can
+;; repeat with TAB / Shift-TAB.
+(map! :n "<tab>"     #'evil-shift-right-line
+      :n "<backtab>" #'evil-shift-left-line
+      :v "<tab>"     #'+evil/shift-right
+      :v "<backtab>" #'+evil/shift-left)

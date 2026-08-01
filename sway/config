@@ -67,6 +67,8 @@ bindswitch --reload --locked lid:off output eDP-1 enable
 
 
 input type:keyboard {
+    # US layout first, Swedish second. Switch with $mod+Shift+i (see key bindings).
+    xkb_layout "us,se"
     repeat_delay 200
     repeat_rate 40
 }
@@ -99,7 +101,7 @@ input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
     bindsym $mod+Shift+q kill
 
     # Start your launcher
-    bindsym $mod+d exec $menu
+    bindsym $mod+space exec $menu
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
@@ -112,7 +114,10 @@ input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
     bindsym $mod+Shift+c reload
 
     # Lock screen
-    bindsym $mod+Shift+Escape exec swaylock -f -c 000000 
+    bindsym $mod+Shift+Escape exec swaylock -f -c 000000
+
+    # Cycle keyboard layout (US <-> Swedish)
+    bindsym $mod+Shift+i input type:keyboard xkb_switch_layout next
 
     # Exit sway (logs you out of your Wayland session)
     bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
@@ -188,7 +193,7 @@ input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
     bindsym $mod+Shift+space floating toggle
 
     # Swap focus between the tiling area and the floating area
-    bindsym $mod+space focus mode_toggle
+    #bindsym $mod+space focus mode_toggle
 
     # Move focus to the parent container
     bindsym $mod+a focus parent
