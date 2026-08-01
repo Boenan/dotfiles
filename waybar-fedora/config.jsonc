@@ -1,5 +1,6 @@
 // -*- mode: jsonc -*-
 {
+    "ipc": true,
     // "layer": "top", // Waybar at top layer
     // "position": "bottom", // Waybar position (top|bottom|left|right)
     "height": 1, // Slightly taller to accommodate the pill shapes
