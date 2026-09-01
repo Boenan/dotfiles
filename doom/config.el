@@ -90,11 +90,6 @@
 (add-hook! '(yaml-mode-hook yaml-ts-mode-hook)
   (setq-local corfu-auto nil))
 
-;; Disable code actions only for rust-mode
-(add-hook 'rust-mode-hook
-          (lambda ()
-            (setq-local eglot-ignored-server-capabilities '(:codeActionProvider))))
-
 
 (after! org
        (doom-themes-org-config)
@@ -134,3 +129,26 @@ run the usual TAB command instead."
       :n "<backtab>" #'evil-shift-left-line
       :v "<tab>"     #'+evil/shift-right
       :v "<backtab>" #'+evil/shift-left)
+
+(use-package! exec-path-from-shell
+  :config
+  (setq exec-path-from-shell-arguments '("-l"))
+  (exec-path-from-shell-initialize))
+
+(setq lsp-disabled-clients '(omnisharp csharp-roslyn))
+
+(after! lsp-mode
+  (setq lsp-rust-analyzer-server-command '("rust-analyzer")))
+
+;; Ensure rust-analyzer supports standalone files by clearing the project root.
+(defun my/rust-analyzer-standalone-hook ()
+  (when (and (eq major-mode 'rust-mode)
+             (not (locate-dominating-file default-directory "Cargo.toml")))
+    (setq-local lsp-session-folders-blacklist '(".*"))))
+
+(add-hook 'lsp-before-initialize-hook #'my/rust-analyzer-standalone-hook)
+
+(add-hook 'rust-mode-hook #'lsp-deferred)
+
+(set-company-backend! 'rust-mode '(company-capf))
+(set-company-backend! 'rustic-mode '(company-capf))
