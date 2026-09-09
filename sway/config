@@ -253,7 +253,8 @@ bindsym $mod+Shift+r exec ~/.config/sway/scripts/renumber_workspaces.sh
 
 # night mode
 #bindsym $mod+Shift+n exec pkill -x wlsunset || wlsunset -l 59.4 -L 17.9 -T 3500 -t 3500
-bindsym $mod+Shift+n exec pkill -x wlsunset || wlsunset -T 3501 -t 3500
+#bindsym $mod+Shift+n exec pkill -x wlsunset || wlsunset -T 3501 -t 3500
+bindsym $mod+Shift+n exec pkill -x wlsunset || wlsunset -T 5001 -t 5000
 
 # Include configs from 3 locations:
 #  - /usr/share/sway/config.d
