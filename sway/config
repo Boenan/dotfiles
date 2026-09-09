@@ -41,6 +41,7 @@ output eDP-1 scale 1.25
 # Alienware screen
 output DP-6 mode 3840x2160@120Hz position 0 0 scale 2
 output DP-7 mode 3840x2160@120Hz position 0 0 scale 2
+output DP-4 mode 3840x2160@120Hz position 0 0 scale 2
 # BG Lenovo screen
 output DP-2 mode 3440x1440@60Hz position 0 0 scale 1.5
 
@@ -249,6 +250,10 @@ bindsym $mod+r mode "resize"
 
 # renumber the workspaces
 bindsym $mod+Shift+r exec ~/.config/sway/scripts/renumber_workspaces.sh
+
+# night mode
+#bindsym $mod+Shift+n exec pkill -x wlsunset || wlsunset -l 59.4 -L 17.9 -T 3500 -t 3500
+bindsym $mod+Shift+n exec pkill -x wlsunset || wlsunset -T 3501 -t 3500
 
 # Include configs from 3 locations:
 #  - /usr/share/sway/config.d
