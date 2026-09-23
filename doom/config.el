@@ -152,3 +152,15 @@ run the usual TAB command instead."
 
 (set-company-backend! 'rust-mode '(company-capf))
 (set-company-backend! 'rustic-mode '(company-capf))
+
+;; Browser: always hand URLs to Firefox instead of guessing via xdg-open.
+;; This covers `SPC o b' (open current file), `SPC s o' (online search),
+;; org/markdown link following and every other `browse-url' caller.
+(setq browse-url-browser-function #'browse-url-firefox
+      browse-url-firefox-program (or (executable-find "firefox") "firefox")
+      browse-url-firefox-new-window-is-tab t)
+
+;; `SPC o B' -- open the URL at point, or prompt for one, in Firefox.
+(map! :leader
+      (:prefix "o"
+       :desc "Browse URL in Firefox" "B" #'browse-url))
