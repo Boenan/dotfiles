@@ -54,3 +54,8 @@
 ;; (unpin! t)
 
 (package! exec-path-from-shell)
+
+;; GitHub from inside Emacs, backed by the `gh' CLI.
+(package! consult-gh)
+(package! consult-gh-embark)      ; embark actions on repos/issues/PRs
+(package! consult-gh-nerd-icons)  ; icons in the minibuffer (matches Hack Nerd Font)
