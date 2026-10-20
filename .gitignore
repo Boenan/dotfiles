@@ -12,5 +12,8 @@ emacs/recentf
 emacs/tramp
 emacs/transient
 emacs/undo-fu-session
+emacs/tree-sitter
+emacs/history
+emacs/places
 custom.el
 vim/pack/colors/opt/everforest/after
