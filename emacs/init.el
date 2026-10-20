@@ -18,13 +18,29 @@
   (use-short-answers t)
   (ring-bell-function #'ignore)
   (display-line-numbers-type 'relative)
+  :bind (("M-o"     . other-window)
+         ("C-x C-b" . ibuffer)
+         ("C-x k"   . kill-current-buffer)
+         ("M-/"     . hippie-expand)
+         ("M-z"     . zap-up-to-char)
+         ("M-u"     . upcase-dwim)
+         ("M-l"     . downcase-dwim)
+         ("M-c"     . capitalize-dwim)
+         ("C-,"     . duplicate-dwim)
+         ("C-c c"   . compile)
+         ("C-c p"   . winner-undo)
+         ("C-c n"   . winner-redo))
   :config
   (global-display-line-numbers-mode 1)
   (recentf-mode 1)
   (savehist-mode 1)
   (save-place-mode 1)
   (global-auto-revert-mode 1)
-  (electric-pair-mode 1))
+  (electric-pair-mode 1)
+  (delete-selection-mode 1)
+  (repeat-mode 1)
+  (winner-mode 1)
+  (windmove-default-keybindings))
 
 (use-package which-key :ensure nil :config (which-key-mode 1))
 
@@ -62,6 +78,11 @@
 ;; Git
 (use-package magit
   :bind ("C-x g" . magit-status))
+
+;; Move lines
+(use-package move-text
+  :bind (("M-p" . move-text-up)
+         ("M-n" . move-text-down)))
 
 (use-package gruber-darker-theme
   :config
