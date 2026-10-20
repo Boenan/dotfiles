@@ -32,7 +32,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-material-dark)
+(setq doom-theme 'gruber-darker)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relrtive line numbers, set this to `relative'.
@@ -153,6 +153,54 @@ run the usual TAB command instead."
 (set-company-backend! 'rust-mode '(company-capf))
 (set-company-backend! 'rustic-mode '(company-capf))
 
+;;; Terraform / OpenTofu -------------------------------------------------------
+;; The module flag does all the wiring: `:tools (terraform +lsp)' adds `lsp!' to
+;; `terraform-mode-local-vars-hook'. lsp-mode registers two clients for
+;; terraform-mode -- `tfmls' (terraform-ls, priority 1) and the abandoned `tfls'
+;; (terraform-lsp, priority -1) -- and picks the highest-priority one whose
+;; binary is actually on PATH, so terraform-ls wins.
+;;
+;; `SPC m' in a .tf buffer runs init/plan/apply/validate/fmt/destroy through
+;; `compile', using terragrunt instead of terraform when that is installed (see
+;; `+terraform-runner').
+;;
+;; Requires: terraform-ls on PATH, plus terraform itself for the `SPC m' commands.
+(after! lsp-mode
+  ;; Completing a resource/data block inserts stubs for its required arguments
+  ;; rather than just the block header.
+  (setq lsp-terraform-ls-prefill-required-fields t))
+
+;;; Ansible --------------------------------------------------------------------
+;; Doom's `:tools ansible' module has no +lsp flag. It turns on the `ansible'
+;; minor mode in YAML buffers that sit inside a playbook/role tree (see
+;; `+ansible-yaml-mode' for the detection rules: roles/, tasks/main.yml,
+;; ansible.cfg, galaxy.yml) but never starts a language server. lsp-mode already
+;; ships the client (`ansible-ls'), and its activation function fires only when
+;; `ansible-mode' is on -- so the single missing piece is the call to `lsp!'.
+;;
+;; Done here rather than by enabling `:lang (yaml +lsp)', which would attach
+;; yaml-language-server to *every* YAML file. This keeps LSP scoped to Ansible
+;; projects. `ansible-ls' registers itself as an add-on client, so yamlls is
+;; started alongside it in those buffers when its binary is present -- the
+;; pairing upstream intends -- and add-on clients still start on their own when
+;; it isn't.
+;;
+;; `*-local-vars-hook' runs after `hack-local-variables', which is after the
+;; yaml-mode hook that flips `ansible-mode' on, so the check below is reliable
+;; and any .dir-locals.el (e.g. `ansible-vault-password-file') is already in
+;; effect.
+;;
+;; Requires: ansible-language-server on PATH, plus `ansible' and `ansible-lint',
+;; which the server shells out to for validation.
+(add-hook! '(yaml-mode-local-vars-hook yaml-ts-mode-local-vars-hook)
+  :append
+  (defun +ansible-init-lsp-h ()
+    (when (bound-and-true-p ansible-mode)
+      (lsp!)
+      ;; Undo the blanket YAML opt-out above: with a server attached the
+      ;; candidates are real module and option names, not guesses.
+      (setq-local corfu-auto t))))
+
 ;; Browser: always hand URLs to Firefox instead of guessing via xdg-open.
 ;; This covers `SPC o b' (open current file), `SPC s o' (online search),
 ;; org/markdown link following and every other `browse-url' caller.
@@ -219,6 +267,23 @@ run the usual TAB command instead."
   ;; Icons in the minibuffer.
   (require 'consult-gh-nerd-icons)
   (consult-gh-nerd-icons-mode +1))
+
+;; Forge integration. Enabling this mode does two things:
+;;   1. `RET' on an issue/PR from any consult-gh list opens it in a Forge
+;;      buffer instead of consult-gh's own view, so the whole magit topic UI
+;;      (`C-c C-c' to act, section folding, local caching) applies. Set
+;;      `consult-gh-issue-action' / `consult-gh-pr-action' back to
+;;      `consult-gh--issue-view-action' / `consult-gh--pr-view-action' to
+;;      prefer consult-gh's own viewer again.
+;;   2. It overrides `ghub--token' to shell out to `gh auth token'. That is
+;;      what lets Forge authenticate off the gh CLI keyring, so no personal
+;;      access token has to be written to ~/.authinfo in plaintext.
+(use-package! consult-gh-forge
+  :after (consult-gh forge)
+  :config
+  ;; Forge pulls the topic on first view; give a slow repo room to finish.
+  (setq consult-gh-forge-timeout-seconds 20)
+  (consult-gh-forge-mode +1))
 
 ;; `SPC g h' -- GitHub. `SPC g h h' opens the magit-style dispatch menu.
 (map! :leader

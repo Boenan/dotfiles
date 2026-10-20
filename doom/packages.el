@@ -59,3 +59,11 @@
 (package! consult-gh)
 (package! consult-gh-embark)      ; embark actions on repos/issues/PRs
 (package! consult-gh-nerd-icons)  ; icons in the minibuffer (matches Hack Nerd Font)
+(package! consult-gh-forge)       ; open issues/PRs in magit-forge buffers
+
+;; Gruber Darker theme by rexim (https://github.com/rexim/gruber-darker-theme).
+(package! gruber-darker-theme)
+
+;; Doom's dired module colors listings with diredfl, whose faces gruber-darker
+;; does not theme. Disable it so dired uses the theme's own dired faces.
+(package! diredfl :disable t)
