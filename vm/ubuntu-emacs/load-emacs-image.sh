@@ -73,6 +73,9 @@ ssh_vm 'distrobox enter emacs -- true'
 ssh_vm 'distrobox enter emacs -- distrobox-export --app emacs --export-label none'
 ssh_vm 'distrobox enter emacs -- distrobox-export --bin /usr/local/bin/emacs --export-path ~/.local/bin'
 
+# Link the fish, starship and tmux dotfiles from the image into ~/.config.
+ssh_vm 'distrobox enter emacs -- link-dotfiles'
+
 echo
 echo "Done. In the VM, start Emacs from the app list (\"Emacs (GUI)\"),"
 echo "or run 'emacs' in a terminal."

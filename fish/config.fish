@@ -20,9 +20,12 @@ if command -v brew >/dev/null
     end
 end
 
-set -gx EDITOR vim
-set -gx VISUAL vim
-set -gx KUBE_EDITOR vim
+# DOTFILES_EDITOR is set by the emacs container (containerfile.emacs).
+set -l editor vim
+set -q DOTFILES_EDITOR; and set editor $DOTFILES_EDITOR
+set -gx EDITOR $editor
+set -gx VISUAL $editor
+set -gx KUBE_EDITOR $editor
 set -gx HELIX_RUNTIME "$HOME/.config/helix/runtime"
 set -gx STARSHIP_CONFIG "$HOME/.config/starship/starship.toml"
 

@@ -37,6 +37,11 @@ ARG KUBESEAL_VERSION=0.41.1
 ARG GLAB_VERSION=1.124.0
 ARG REALM_VERSION=0.2.1
 ARG KCTX_VERSION=1.0.0
+ARG YQ_VERSION=4.54.1
+ARG CILIUM_CLI_VERSION=0.20.1
+ARG HUBBLE_VERSION=1.20.2
+ARG KUBELOGIN_VERSION=1.36.4
+ARG ORAS_VERSION=1.3.5
 
 # CHECKPOINT_DISABLE stops terraform from calling checkpoint-api.hashicorp.com
 # to check for new versions.
@@ -52,6 +57,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # symlinked to `fd`. libgccjit-13-dev is what lets Emacs native-compile at
 # RUNTIME (offline-safe, it needs no network -- only gcc + libgccjit).
 # shellcheck backs flymake in bash-ts-mode buffers.
+#
+# Network tools: the base image already has openssh-client, dig, ip, ping,
+# tracepath, mtr, nc, tcpdump, telnet, ethtool and lsof. The list below adds
+# the rest.
 # ---------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -81,6 +90,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         fontconfig \
         fonts-noto-color-emoji \
         locales \
+        traceroute \
+        socat \
+        nmap \
+        iperf3 \
+        net-tools \
+        whois \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
@@ -93,6 +108,43 @@ RUN add-apt-repository -y ppa:ubuntuhandbook1/emacs \
     && apt-get install -y emacs-pgtk \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# Podman, for nested containers inside the distrobox. This must work when the
+# VM host runs docker, so it cannot use the host engine or systemd:
+#   - cgroupfs and a file events log, because there is no systemd in the box.
+#   - fuse-overlayfs, because the kernel cannot mount overlay on overlay.
+#   - A separate rootless storage path. $HOME is the host home, and a podman
+#     on the host must not share (and break) the same image store.
+# Rootless podman needs a subuid/subgid range for the user. distrobox-init
+# creates the user with useradd, and useradd adds that range to /etc/subuid
+# and /etc/subgid.
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        podman \
+        uidmap \
+        fuse-overlayfs \
+        slirp4netns \
+    && rm -rf /var/lib/apt/lists/* \
+    && printf '%s\n' \
+      '[containers]' \
+      'netns = "slirp4netns"' \
+      '' \
+      '[engine]' \
+      'cgroup_manager = "cgroupfs"' \
+      'events_logger = "file"' \
+      > /etc/containers/containers.conf \
+    && printf '%s\n' \
+      '[storage]' \
+      'driver = "overlay"' \
+      'runroot = "/run/containers/storage"' \
+      'graphroot = "/var/lib/containers/storage"' \
+      'rootless_storage_path = "$HOME/.local/share/containers/storage-distrobox"' \
+      '' \
+      '[storage.options.overlay]' \
+      'mount_program = "/usr/bin/fuse-overlayfs"' \
+      > /etc/containers/storage.conf \
+    && podman --version
 
 # ---------------------------------------------------------------------------
 # Iosevka -- early-init.el sets the frame font to "Iosevka-15". Ubuntu does
@@ -174,8 +226,11 @@ RUN for pair in "terraform:${TERRAFORM_VERSION}" "terraform-ls:${TERRAFORM_LS_VE
     && chmod 755 /usr/local/bin/terraform /usr/local/bin/terraform-ls /usr/local/bin/vault
 
 # ---------------------------------------------------------------------------
-# Kubernetes and GitLab CLIs, as pinned release files (see the ARGs above).
-# All of them go to /usr/local/bin.
+# Kubernetes, GitLab and OCI CLIs, as pinned release files (see the ARGs
+# above). All of them go to /usr/local/bin. yq comes from GitHub because the
+# Ubuntu `yq' package is a different tool (a Python wrapper around jq).
+# kubelogin is int128/kubelogin; the kubectl-oidc_login link lets
+# `kubectl oidc-login' find it.
 # ---------------------------------------------------------------------------
 RUN cd /tmp \
     && curl -fsSL -o /usr/local/bin/kubectl \
@@ -194,15 +249,35 @@ RUN cd /tmp \
          | tar -xz -C /usr/local/bin realm \
     && curl -fsSL "https://github.com/Boenan/kctx/releases/download/kctx-v${KCTX_VERSION}/kctx-linux-x86_64.tar.gz" \
          | tar -xz -C /usr/local/bin kctx \
+    && curl -fsSL -o /usr/local/bin/yq \
+         "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
+    && curl -fsSL "https://github.com/cilium/cilium-cli/releases/download/v${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin cilium \
+    && curl -fsSL "https://github.com/cilium/hubble/releases/download/v${HUBBLE_VERSION}/hubble-linux-amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin hubble \
+    && curl -fsSL -o /tmp/kubelogin.zip \
+         "https://github.com/int128/kubelogin/releases/download/v${KUBELOGIN_VERSION}/kubelogin_linux_amd64.zip" \
+    && unzip -q -o /tmp/kubelogin.zip -d /usr/local/bin kubelogin \
+    && rm /tmp/kubelogin.zip \
+    && ln -sf kubelogin /usr/local/bin/kubectl-oidc_login \
+    && curl -fsSL "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin oras \
     && cd /usr/local/bin \
     && chown root:root kubectl argocd helm istioctl kubeseal glab realm kctx \
+         yq cilium hubble kubelogin oras \
     && chmod 755 kubectl argocd helm istioctl kubeseal glab realm kctx \
+         yq cilium hubble kubelogin oras \
     && kubectl version --client \
     && helm version \
     && istioctl version --remote=false \
     && argocd version --client \
     && kubeseal --version \
     && glab version \
+    && yq --version \
+    && cilium version --client \
+    && hubble version \
+    && kubelogin --version \
+    && oras version \
     && vault version
 
 # ---------------------------------------------------------------------------
@@ -296,6 +371,19 @@ RUN printf '%s\n' \
       > /usr/local/bin/emacs \
     && chmod 755 /usr/local/bin/emacs
 
+# ---------------------------------------------------------------------------
+# $EDITOR. `emacs-editor' opens the file in the running Emacs, through the
+# server that 60server.el starts below. If no Emacs runs, `-a ""' starts a
+# daemon (through the launcher above, so with /emacs.d), and `-r' opens a
+# frame for it. A wrapper, not the command itself, so $EDITOR has no
+# arguments for git, kubectl and sudoedit to parse.
+# ---------------------------------------------------------------------------
+RUN printf '%s\n' \
+      '#!/bin/sh' \
+      'exec /usr/bin/emacsclient -r -a "" "$@"' \
+      > /usr/local/bin/emacs-editor \
+    && chmod 755 /usr/local/bin/emacs-editor
+
 # Desktop entry for `distrobox-export --app emacs'. That command exports every
 # entry that mentions "emacs", so keep only the GUI one. It calls
 # /usr/bin/emacs directly, which would skip /emacs.d, so point it at the
@@ -315,12 +403,41 @@ RUN printf '%s\n' \
       "                '(:yaml (:schemaStore (:enable :json-false)))))" \
       > /etc/emacs/site-start.d/50offline.el
 
-# Same variable for interactive shells, whether the user lands in bash or
-# fish. Fish never reads /etc/profile, so it gets its own file.
+# Start the Emacs server in the container only, so `emacs-editor' opens files
+# in the Emacs that runs. It starts after init.el, and not in batch mode, in
+# a daemon, or when a server already runs.
+RUN printf '%s\n' \
+      ';;; 60server.el -*- lexical-binding: t; -*-' \
+      "(add-hook 'after-init-hook" \
+      "          (lambda ()" \
+      "            (require 'server)" \
+      "            (unless (or noninteractive (daemonp) (server-running-p))" \
+      "              (server-start))))" \
+      > /etc/emacs/site-start.d/60server.el
+
+# Same variables for interactive shells, whether the user lands in bash or
+# fish. Fish never reads /etc/profile, so it gets its own file. config.fish
+# sets EDITOR itself; it uses DOTFILES_EDITOR when it is set and vim when not,
+# so vim stays the editor on machines outside this container.
 RUN printf '%s\n' \
       'export EMACSDIR=/emacs.d' \
+      'export EDITOR=emacs-editor VISUAL=emacs-editor KUBE_EDITOR=emacs-editor' \
       > /etc/profile.d/emacs.sh \
     && mkdir -p /etc/fish/conf.d \
     && printf '%s\n' \
       'set -gx EMACSDIR /emacs.d' \
+      'set -gx DOTFILES_EDITOR emacs-editor' \
       > /etc/fish/conf.d/emacs.fish
+
+# ---------------------------------------------------------------------------
+# Dotfiles for the shell tools above: fish, starship and tmux. They are baked
+# into /dotfiles, because $HOME is the host's and the VM has no copy of this
+# repo. `link-dotfiles' (symlink_script.emacs.sh) links them into ~/.config;
+# load-emacs-image.sh runs it once. fish writes fish_variables, so the files
+# must be writable by the user that distrobox maps in.
+# ---------------------------------------------------------------------------
+COPY fish /dotfiles/fish
+COPY starship /dotfiles/starship
+COPY tmux /dotfiles/tmux
+COPY --chmod=755 symlink_script.emacs.sh /usr/local/bin/link-dotfiles
+RUN chmod -R a+rwX /dotfiles

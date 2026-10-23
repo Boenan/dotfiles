@@ -155,3 +155,4 @@
   :config
   (load-theme 'gruber-darker t))
 
+(package-vc-install "https://github.com/Boenan/ek9")
