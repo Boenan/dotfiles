@@ -1,61 +1,67 @@
-# Doom Emacs (v3/master) in a distrobox container, fully self-contained.
+# Plain Emacs 30 (config from ./emacs) in a distrobox container, fully
+# self-contained.
 #
 # Target: an air-gapped Ubuntu 24.04 VM. Nothing here may need the network at
-# RUN time, so every package, grammar, font, LSP server and native-comp
-# artifact is baked at BUILD time.
+# RUN time, so every package, grammar, font, LSP server, native module and
+# native-comp artifact is baked at BUILD time.
 #
-#   Build:  docker build -f containerfile.emacs -t doom-emacs:latest .
-#   Save:   docker save doom-emacs:latest | zstd -o doom-emacs.tar.zst
-#   Load:   (on the VM) zstd -dc doom-emacs.tar.zst | podman load
-#   Create: distrobox create --image doom-emacs:latest --name emacs
+#   Build:  docker build -f containerfile.emacs -t emacs:latest .
+#   Save:   docker save emacs:latest | zstd -o emacs.tar.zst
+#   Load:   (on the VM) zstd -dc emacs.tar.zst | podman load
+#   Create: distrobox create --image emacs:latest --name emacs
 #   Enter:  distrobox enter emacs -- emacs
 #   Export: distrobox enter emacs -- distrobox-export --bin /usr/local/bin/emacs
 #
-# Why the odd paths: distrobox bind-mounts the host $HOME, so ~/.emacs.d and
-# ~/.config/doom inside the container are the HOST's files (built against the
-# host's Emacs). Doom therefore lives at /emacs.d, the private config at /doom,
-# and all mutable state at /doom-local -- none of which the host home can shadow.
+# Why the odd path: distrobox bind-mounts the host $HOME, so ~/.emacs.d and
+# ~/.config/emacs inside the container are the HOST's files (built against the
+# host's Emacs). The config, its elpa/ packages, grammars and eln-cache all
+# live at /emacs.d instead, which the host home cannot shadow.
 
 FROM quay.io/toolbx/ubuntu-toolbox:24.04
 
-# Pinned to the commits currently checked out in ./emacs.d. Bump deliberately;
-# the framework and its module tree must move together.
-ARG DOOM_REF=46687e54e
-ARG NERD_FONTS_VERSION=v3.4.0
+ARG IOSEVKA_VERSION=34.9.0
+ARG NERD_FONTS_VERSION=3.5.1
+ARG EZA_VERSION=0.23.5
+ARG STARSHIP_VERSION=1.27.0
+ARG ATUIN_VERSION=18.24.2
+ARG ZOXIDE_VERSION=0.10.0
 ARG NODE_VERSION=22.14.0
-ARG TERRAFORM_VERSION=1.16.4
+ARG TERRAFORM_VERSION=1.17.0
 ARG TERRAFORM_LS_VERSION=0.39.0
-# Ahead-of-time native compilation: much longer build and a bigger image, but
-# no first-run JIT compilation storm. Set to --aot to enable.
-ARG DOOM_AOT=
-# C#/.NET is off by default: config.el disables both omnisharp and csharp-roslyn,
-# so the 1.5GB SDK would sit unused. Set to 1 to include it.
-ARG WITH_DOTNET=0
+ARG VAULT_VERSION=2.2.1
+ARG KUBECTL_VERSION=1.37.1
+ARG HELM_VERSION=4.3.1
+ARG ISTIO_VERSION=1.31.3
+ARG ARGOCD_VERSION=3.5.6
+ARG KUBESEAL_VERSION=0.41.1
+ARG GLAB_VERSION=1.124.0
+ARG REALM_VERSION=0.2.1
+ARG KCTX_VERSION=1.0.0
 
+# CHECKPOINT_DISABLE stops terraform from calling checkpoint-api.hashicorp.com
+# to check for new versions.
 ENV DEBIAN_FRONTEND=noninteractive \
     EMACSDIR=/emacs.d \
-    DOOMDIR=/doom \
-    DOOMLOCALDIR=/doom-local/ \
+    CHECKPOINT_DISABLE=1 \
     LANG=C.UTF-8
 
 # ---------------------------------------------------------------------------
 # Base tooling
 #
-# fd-find installs the binary as `fdfind` on Debian/Ubuntu; Doom looks for `fd`,
-# so it gets symlinked below. libgccjit-13-dev is what lets Emacs native-compile
-# at RUNTIME (offline-safe, it needs no network -- only gcc + libgccjit).
+# fd-find installs the binary as `fdfind` on Debian/Ubuntu, so it gets
+# symlinked to `fd`. libgccjit-13-dev is what lets Emacs native-compile at
+# RUNTIME (offline-safe, it needs no network -- only gcc + libgccjit).
+# shellcheck backs flymake in bash-ts-mode buffers.
 # ---------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
-        cmake \
-        libtool-bin \
-        libvterm-dev \
         libgccjit-13-dev \
         gcc-13 \
         git \
         curl \
         wget \
         unzip \
+        xz-utils \
         zstd \
         ca-certificates \
         gnupg \
@@ -68,12 +74,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         jq \
         wl-clipboard \
         xclip \
-        sqlite3 \
         shellcheck \
-        aspell \
-        aspell-en \
-        pandoc \
-        editorconfig \
         python3 \
         python3-venv \
         pipx \
@@ -94,236 +95,232 @@ RUN add-apt-repository -y ppa:ubuntuhandbook1/emacs \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------------------------------------------------------
-# Nerd Fonts -- config.el asks for "Hack Nerd Font"; the symbols-only face is
-# what nerd-icons/doom-modeline render from. `nerd-icons-install-fonts` would
-# download these at runtime, which the air-gapped VM cannot do.
+# Iosevka -- early-init.el sets the frame font to "Iosevka-15". Ubuntu does
+# not package it, so take the TTF release from GitHub.
+#
+# It goes under /usr/share/fonts, NOT /usr/local/share/fonts: distrobox-init
+# bind-mounts the host's /usr/share/fonts over /usr/local/share/fonts, which
+# would hide the font inside the distrobox.
 # ---------------------------------------------------------------------------
-RUN mkdir -p /usr/local/share/fonts/NerdFonts \
-    && for f in Hack NerdFontsSymbolsOnly; do \
-         curl -fsSL -o "/tmp/$f.zip" \
-           "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONTS_VERSION}/$f.zip" \
-         && unzip -q -o "/tmp/$f.zip" -d /usr/local/share/fonts/NerdFonts \
-         && rm "/tmp/$f.zip"; \
-       done \
-    && fc-cache -f
+RUN mkdir -p /usr/share/fonts/truetype/iosevka \
+    && curl -fsSL -o /tmp/iosevka.zip \
+       "https://github.com/be5invis/Iosevka/releases/download/v${IOSEVKA_VERSION}/PkgTTF-Iosevka-${IOSEVKA_VERSION}.zip" \
+    && unzip -q -o /tmp/iosevka.zip -d /usr/share/fonts/truetype/iosevka \
+    && rm /tmp/iosevka.zip \
+    && fc-cache -f \
+    && fc-list | grep -q 'Iosevka'
 
 # ---------------------------------------------------------------------------
-# Go toolchain + the binaries Doom's :lang go module shells out to
+# Symbols Nerd Font -- Iosevka has no Nerd Font icons. init.el shows the
+# private use areas with "Symbols Nerd Font Mono", so the icons of eza and
+# starship render in ghostel. Same /usr/share/fonts rule as Iosevka above.
 # ---------------------------------------------------------------------------
-ENV GOPATH=/opt/go \
-    GOTOOLCHAIN=local \
-    PATH=/usr/local/go/bin:/opt/go/bin:$PATH
-# Each `go install ...@latest` must be its own invocation -- Go refuses to
-# resolve @latest for packages spanning different modules in one command.
-RUN GO_VERSION="$(curl -fsSL https://go.dev/VERSION?m=text | head -1)" \
-    && curl -fsSL "https://go.dev/dl/${GO_VERSION}.linux-amd64.tar.gz" \
-       | tar -C /usr/local -xz \
-    && for pkg in \
-         golang.org/x/tools/gopls@latest \
-         golang.org/x/tools/cmd/goimports@latest \
-         github.com/go-delve/delve/cmd/dlv@latest \
-         mvdan.cc/gofumpt@latest \
-         github.com/cweill/gotests/gotests@latest \
-         github.com/fatih/gomodifytags@latest; do \
-         GOBIN=/usr/local/bin go install "$pkg" || exit 1; \
-       done \
-    && go clean -modcache \
-    && rm -rf /root/.cache/go-build
+RUN mkdir -p /usr/share/fonts/truetype/nerd-fonts-symbols \
+    && curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERD_FONTS_VERSION}/NerdFontsSymbolsOnly.tar.xz" \
+         | tar -xJ -C /usr/share/fonts/truetype/nerd-fonts-symbols \
+             SymbolsNerdFont-Regular.ttf SymbolsNerdFontMono-Regular.ttf \
+    && fc-cache -f \
+    && fc-list | grep -q 'Symbols Nerd Font Mono'
 
 # ---------------------------------------------------------------------------
-# Rust toolchain + rust-analyzer (config.el pins the server command to the
-# bare `rust-analyzer` name, so it must be on PATH). rust-src is required for
-# rust-analyzer to resolve std.
+# Shell tools for fish in ghostel. The ls function in fish/functions/ls.fish
+# runs `eza --icons', and fish/config.fish starts starship, atuin and zoxide.
+# Ubuntu 24.04 has old or no versions of these, so take the pinned release
+# binaries.
 # ---------------------------------------------------------------------------
-ENV RUSTUP_HOME=/opt/rustup \
-    CARGO_HOME=/opt/cargo \
-    PATH=/opt/cargo/bin:$PATH
-RUN curl -fsSL https://sh.rustup.rs \
-      | sh -s -- -y --no-modify-path --profile minimal \
-          -c rust-analyzer -c rust-src -c clippy -c rustfmt \
-    && chmod -R a+rwX /opt/cargo /opt/rustup
+RUN curl -fsSL "https://github.com/eza-community/eza/releases/download/v${EZA_VERSION}/eza_x86_64-unknown-linux-gnu.tar.gz" \
+         | tar -xz -C /usr/local/bin ./eza \
+    && curl -fsSL "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/starship-x86_64-unknown-linux-gnu.tar.gz" \
+         | tar -xz -C /usr/local/bin starship \
+    && curl -fsSL "https://github.com/atuinsh/atuin/releases/download/v${ATUIN_VERSION}/atuin-x86_64-unknown-linux-gnu.tar.gz" \
+         | tar -xz -C /usr/local/bin --strip-components=1 atuin-x86_64-unknown-linux-gnu/atuin \
+    && curl -fsSL "https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+         | tar -xz -C /usr/local/bin zoxide \
+    && cd /usr/local/bin \
+    && chown root:root eza starship atuin zoxide \
+    && chmod 755 eza starship atuin zoxide \
+    && eza --version \
+    && starship --version \
+    && atuin --version \
+    && zoxide --version
 
 # ---------------------------------------------------------------------------
-# Node -- home of most language servers. `ansible-language-server` is the one
-# actually wired up today: config.el starts it (lsp-mode's `ansible-ls' client)
-# in YAML buffers where Doom's :tools ansible module has turned on
-# `ansible-mode'. It registers itself as an add-on client, so yaml-language-server
-# below is started alongside it there. The rest are staged for the day a +lsp
-# flag gets added, and cost nothing but image size.
+# Node -- home of the YAML and Bash language servers. They match two of the
+# grammars in `treesit-auto-langs'; start them with M-x eglot. The schema
+# store of yaml-language-server is turned off further down, because it
+# downloads JSON schemas from schemastore.org.
 # ---------------------------------------------------------------------------
 RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
       | tar -C /usr/local --strip-components=1 -xJ \
     && npm install -g --no-fund --no-audit \
-         @ansible/ansible-language-server \
          yaml-language-server \
          bash-language-server \
-         vscode-langservers-extracted \
     && npm cache clean --force
 
 # ---------------------------------------------------------------------------
-# Terraform + terraform-ls. lsp-mode's `tfmls' client looks for `terraform-ls'
-# on PATH; `terraform' itself backs the :tools terraform module's `SPC m'
-# commands (init/plan/apply/...) and its doctor check. Taken as release zips
-# rather than through the HashiCorp apt repo so the versions are pinned above
-# and no extra key/repo is left configured in the image.
+# Terraform, terraform-ls and Vault. init.el starts eglot in terraform-mode,
+# and eglot runs `terraform-ls serve'. Taken as release zips rather than
+# through the HashiCorp apt repo so the versions are pinned above and no extra
+# key/repo is left configured in the image.
 # ---------------------------------------------------------------------------
-RUN for pair in "terraform:${TERRAFORM_VERSION}" "terraform-ls:${TERRAFORM_LS_VERSION}"; do \
+RUN for pair in "terraform:${TERRAFORM_VERSION}" "terraform-ls:${TERRAFORM_LS_VERSION}" \
+                "vault:${VAULT_VERSION}"; do \
         name="${pair%%:*}"; version="${pair##*:}"; \
         curl -fsSL -o /tmp/hc.zip \
           "https://releases.hashicorp.com/${name}/${version}/${name}_${version}_linux_amd64.zip" \
         && unzip -q -o /tmp/hc.zip -d /usr/local/bin "$name" \
         && rm /tmp/hc.zip || exit 1; \
     done \
-    && chmod 755 /usr/local/bin/terraform /usr/local/bin/terraform-ls
+    && chmod 755 /usr/local/bin/terraform /usr/local/bin/terraform-ls /usr/local/bin/vault
 
 # ---------------------------------------------------------------------------
-# Python-packaged tooling: linters for :checkers syntax, plus Ansible itself
-# (PEP 668 forbids system-wide pip, so pipx).
-#
-# `--include-deps` is required for ansible: the `ansible` distribution is just
-# the collection bundle and declares no console scripts of its own -- the
-# `ansible`/`ansible-playbook`/`ansible-galaxy` binaries come from its
-# ansible-core dependency. The full bundle rather than bare ansible-core so
-# FQCN completion covers the community collections offline.
-# ansible-language-server shells out to both `ansible` and `ansible-lint`.
+# Kubernetes and GitLab CLIs, as pinned release files (see the ARGs above).
+# All of them go to /usr/local/bin.
+# ---------------------------------------------------------------------------
+RUN cd /tmp \
+    && curl -fsSL -o /usr/local/bin/kubectl \
+         "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
+    && curl -fsSL -o /usr/local/bin/argocd \
+         "https://github.com/argoproj/argo-cd/releases/download/v${ARGOCD_VERSION}/argocd-linux-amd64" \
+    && curl -fsSL "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin --strip-components=1 linux-amd64/helm \
+    && curl -fsSL "https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istioctl-${ISTIO_VERSION}-linux-amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin istioctl \
+    && curl -fsSL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin kubeseal \
+    && curl -fsSL "https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_linux_amd64.tar.gz" \
+         | tar -xz -C /usr/local/bin --strip-components=1 bin/glab \
+    && curl -fsSL "https://github.com/Boenan/realm/releases/download/realm-v${REALM_VERSION}/realm-linux-x86_64.tar.gz" \
+         | tar -xz -C /usr/local/bin realm \
+    && curl -fsSL "https://github.com/Boenan/kctx/releases/download/kctx-v${KCTX_VERSION}/kctx-linux-x86_64.tar.gz" \
+         | tar -xz -C /usr/local/bin kctx \
+    && cd /usr/local/bin \
+    && chown root:root kubectl argocd helm istioctl kubeseal glab realm kctx \
+    && chmod 755 kubectl argocd helm istioctl kubeseal glab realm kctx \
+    && kubectl version --client \
+    && helm version \
+    && istioctl version --remote=false \
+    && argocd version --client \
+    && kubeseal --version \
+    && glab version \
+    && vault version
+
+# ---------------------------------------------------------------------------
+# Python tools. PEP 668 forbids system-wide pip, so pipx.
+#   - pylsp: init.el starts eglot in python-ts-mode, and `pylsp' is the first
+#     server eglot tries there.
+#   - ruff: formatting and linting from the shell.
+#   - ansible: `--include-deps' is required. The `ansible' distribution is the
+#     collection bundle and has no commands of its own; `ansible',
+#     `ansible-playbook' and `ansible-galaxy' come from its ansible-core
+#     dependency. The full bundle, not bare ansible-core, so the community
+#     collections are in the image and need no download.
 # ---------------------------------------------------------------------------
 ENV PIPX_HOME=/opt/pipx \
     PIPX_BIN_DIR=/usr/local/bin
-RUN pipx install ruff \
-    && pipx install mypy \
-    && pipx install yamllint \
+RUN pipx install python-lsp-server \
+    && pipx install ruff \
     && pipx install --include-deps ansible \
-    && pipx install ansible-lint
+    && ansible --version
+
+# Config last -- it is what changes most often, so everything above stays
+# cached when you edit init.el. Only the two init files are copied: the
+# working tree in ./emacs also carries elpa/, eln-cache/ and history built
+# against the HOST's Emacs, which would be both wrong and dead weight here.
+COPY emacs/early-init.el emacs/init.el /emacs.d/
 
 # ---------------------------------------------------------------------------
-# Optional .NET SDK (see WITH_DOTNET above)
+# Install every package init.el asks for. Loading init.el with
+# `use-package-always-ensure' set installs whatever is missing, so the package
+# list lives in one place only. `package-native-compile' compiles each package
+# to /emacs.d/eln-cache now, rather than in a JIT storm on first start.
 # ---------------------------------------------------------------------------
-RUN if [ "$WITH_DOTNET" = "1" ]; then \
-        apt-get update \
-        && apt-get install -y --no-install-recommends dotnet-sdk-8.0 \
-        && apt-get clean && rm -rf /var/lib/apt/lists/*; \
-    fi
-
-# ---------------------------------------------------------------------------
-# Doom itself, pinned. Cloned rather than COPY'd: the working tree in ./emacs.d
-# carries ~450MB of straight/ and eln-cache/ built against the HOST's Emacs,
-# which would be both wrong and dead weight inside this image.
-# ---------------------------------------------------------------------------
-# The sources/doom+ module tree is a submodule, so its commit is pinned by
-# DOOM_REF itself -- `submodule update` resolves it to 5a44cf7bd, matching
-# your working tree.
-RUN git clone https://github.com/doomemacs/doomemacs /emacs.d \
-    && git -C /emacs.d checkout "$DOOM_REF" \
-    && git -C /emacs.d submodule update --init --recursive
-
-# ---------------------------------------------------------------------------
-# Tree-sitter grammars. Must come AFTER the clone above, which requires an
-# empty /emacs.d.
-#
-# Doom v3 uses Emacs' built-in treesit and installs grammars on demand -- a
-# network operation. They are compiled here instead, into
-# $EMACSDIR/tree-sitter, which treesit searches by default (after
-# `treesit-extra-load-path`, before the system directories).
-#
-# The "cannot be located" warnings this prints are expected: `emacs -Q` leaves
-# `user-emacs-directory' at /root/.emacs.d, so treesit's post-install
-# verification looks there rather than at the out-dir it just wrote to. At
-# runtime the wrapper sets --init-directory=/emacs.d and the paths agree.
-# ---------------------------------------------------------------------------
-RUN mkdir -p /emacs.d/tree-sitter \
-    && emacs -Q --batch --eval "(progn \
-         (setq treesit-language-source-alist \
-               '((bash \"https://github.com/tree-sitter/tree-sitter-bash\") \
-                 (c \"https://github.com/tree-sitter/tree-sitter-c\") \
-                 (cpp \"https://github.com/tree-sitter/tree-sitter-cpp\") \
-                 (c-sharp \"https://github.com/tree-sitter/tree-sitter-c-sharp\") \
-                 (cmake \"https://github.com/uyha/tree-sitter-cmake\") \
-                 (dockerfile \"https://github.com/camdencheek/tree-sitter-dockerfile\") \
-                 (elisp \"https://github.com/Wilfred/tree-sitter-elisp\") \
-                 (go \"https://github.com/tree-sitter/tree-sitter-go\") \
-                 (gomod \"https://github.com/camdencheek/tree-sitter-go-mod\") \
-                 (gowork \"https://github.com/omertuc/tree-sitter-go-work\") \
-                 (json \"https://github.com/tree-sitter/tree-sitter-json\") \
-                 (make \"https://github.com/tree-sitter-grammars/tree-sitter-make\") \
-                 (markdown \"https://github.com/tree-sitter-grammars/tree-sitter-markdown\" nil \"tree-sitter-markdown/src\") \
-                 (markdown-inline \"https://github.com/tree-sitter-grammars/tree-sitter-markdown\" nil \"tree-sitter-markdown-inline/src\") \
-                 (org \"https://github.com/milisims/tree-sitter-org\") \
-                 (python \"https://github.com/tree-sitter/tree-sitter-python\") \
-                 (rust \"https://github.com/tree-sitter/tree-sitter-rust\") \
-                 (toml \"https://github.com/tree-sitter-grammars/tree-sitter-toml\") \
-                 (yaml \"https://github.com/tree-sitter-grammars/tree-sitter-yaml\"))) \
-         (dolist (lang (mapcar #'car treesit-language-source-alist)) \
-           (message \"Installing grammar: %s\" lang) \
-           (treesit-install-language-grammar lang \"/emacs.d/tree-sitter\")))"
-
-# Private config last -- it is what changes most often, so everything above
-# stays cached when you edit config.el.
-COPY doom /doom
-
-# ---------------------------------------------------------------------------
-# Install and sync Doom. -e skips the envvar file (exec-path-from-shell in
-# config.el covers PATH at runtime, and a build-time env file would bake
-# HOME=/root). -! auto-accepts prompts.
-# ---------------------------------------------------------------------------
-RUN /emacs.d/bin/doom -! install --no-config --no-env --no-hooks \
-    && /emacs.d/bin/doom -! sync -e -j "$(nproc)" $DOOM_AOT
-
-# vterm builds its native module the first time it is loaded, which would
-# otherwise happen on the air-gapped VM. Force it here instead.
-#
-# `--init-directory' is deliberately NOT used: Doom does not bootstrap itself
-# under `--batch', so its init would not run and straight's build directory
-# would never reach `load-path' -- `(require 'vterm)' then fails with
-# "Cannot open load file". Point at the built package directly instead. The
-# glob keeps the Emacs version out of the path (straight builds into
-# build-<version>/), and vterm.el pulls in nothing outside Emacs' own tree, so
-# its own directory is all `load-path' needs.
-RUN emacs --batch \
+RUN emacs --batch --init-directory=/emacs.d \
       --eval "(progn \
-        (dolist (dir (file-expand-wildcards \"/doom-local/straight/build-*/vterm\")) \
-          (add-to-list 'load-path dir)) \
-        (setq vterm-always-compile-module t) \
-        (require 'vterm))" \
-    && ls /doom-local/straight/build-*/vterm/vterm-module.so >/dev/null
+        (require 'package) \
+        (setq package-native-compile t) \
+        (add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t) \
+        (package-initialize) \
+        (package-refresh-contents))" \
+      -l /emacs.d/init.el
+
+# ---------------------------------------------------------------------------
+# Tree-sitter grammars. treesit-auto would offer to download them on first
+# use, which the air-gapped VM cannot do. Build them here from treesit-auto's
+# own recipes (they pin ABI-14 revisions where Emacs 30 needs them) into
+# /emacs.d/tree-sitter, which treesit searches by default.
+#
+# `--batch' does not activate installed packages, so this step and the next
+# call `package-initialize' before init.el. Without it, use-package cannot
+# find vertico, treesit-auto and the rest.
+# ---------------------------------------------------------------------------
+RUN emacs --batch --init-directory=/emacs.d \
+      -f package-initialize -l /emacs.d/init.el \
+      --eval "(progn \
+        (setq treesit-language-source-alist \
+              (treesit-auto--build-treesit-source-alist)) \
+        (dolist (lang treesit-auto-langs) \
+          (message \"Installing grammar: %s\" lang) \
+          (treesit-install-language-grammar lang)) \
+        (dolist (lang treesit-auto-langs) \
+          (unless (treesit-language-available-p lang) \
+            (error \"Grammar not available: %s\" lang))))"
+
+# ---------------------------------------------------------------------------
+# ghostel's native module. ghostel would otherwise offer to download it the
+# first time M-x ghostel runs, on the VM. Fetch the pre-built release that
+# matches the installed package, then load it once to prove it works.
+# ---------------------------------------------------------------------------
+RUN emacs --batch --init-directory=/emacs.d \
+      -f package-initialize -l /emacs.d/init.el \
+      --eval "(progn \
+        (require 'ghostel-module-install) \
+        (unless (ghostel--download-module (ghostel--module-directory)) \
+          (error \"ghostel module download failed\")) \
+        (require 'ghostel) \
+        (unless (featurep 'ghostel-module) \
+          (error \"ghostel module did not load\")))"
 
 # Every mutable path must be writable by the unprivileged host user that
-# distrobox maps in -- their UID is unknown at build time. This covers the
-# package cache, eln-cache, autosaves, recentf, projectile's cache, and
-# custom.el (which Emacs' Custom interface writes to $DOOMDIR).
-RUN chmod -R a+rwX /doom-local /doom /emacs.d
+# distrobox maps in -- their UID is unknown at build time. This covers elpa/,
+# eln-cache/, custom.el, recentf, savehist, save-place and transient.
+RUN chmod -R a+rwX /emacs.d
 
 # ---------------------------------------------------------------------------
-# Launchers. `emacs` here shadows /usr/bin/emacs via PATH order and pins the
+# Launcher. `emacs` here shadows /usr/bin/emacs via PATH order and pins the
 # init directory, so the host's ~/.emacs.d can never be picked up.
 # ---------------------------------------------------------------------------
 RUN printf '%s\n' \
       '#!/bin/sh' \
       'exec /usr/bin/emacs --init-directory="${EMACSDIR:-/emacs.d}" "$@"' \
       > /usr/local/bin/emacs \
-    && printf '%s\n' \
-      '#!/bin/sh' \
-      'exec /emacs.d/bin/doom "$@"' \
-      > /usr/local/bin/doom \
-    && chmod 755 /usr/local/bin/emacs /usr/local/bin/doom
+    && chmod 755 /usr/local/bin/emacs
 
-# Same variables for interactive shells, so `doom` and `emacsclient` behave
-# whether the user lands in bash or fish.
-#
-# The PATH entries are not redundant with ENV above: config.el runs
-# `exec-path-from-shell-initialize' with '-l', which REPLACES Emacs' exec-path
-# with the PATH of a login fish shell. Fish never reads /etc/profile, so
-# without this the Go and Cargo directories would be stripped and
-# `executable-find' would fail to turn up rust-analyzer or gopls.
+# Desktop entry for `distrobox-export --app emacs'. That command exports every
+# entry that mentions "emacs", so keep only the GUI one. It calls
+# /usr/bin/emacs directly, which would skip /emacs.d, so point it at the
+# launcher above.
+RUN find /usr/share/applications -name 'emacs*.desktop' ! -name emacs.desktop -delete \
+    && sed -i 's#/usr/bin/emacs#/usr/local/bin/emacs#g' /usr/share/applications/emacs.desktop \
+    && grep -q '^Exec=/usr/local/bin/emacs %F$' /usr/share/applications/emacs.desktop
+
+# Container-only Emacs settings. Debian's 00debian.el loads every file in
+# /etc/emacs/site-start.d at startup, so this applies without a change to
+# init.el. It turns off the schema store of yaml-language-server, which would
+# otherwise download JSON schemas from schemastore.org.
+RUN printf '%s\n' \
+      ';;; 50offline.el -*- lexical-binding: t; -*-' \
+      "(with-eval-after-load 'eglot" \
+      "  (setq-default eglot-workspace-configuration" \
+      "                '(:yaml (:schemaStore (:enable :json-false)))))" \
+      > /etc/emacs/site-start.d/50offline.el
+
+# Same variable for interactive shells, whether the user lands in bash or
+# fish. Fish never reads /etc/profile, so it gets its own file.
 RUN printf '%s\n' \
       'export EMACSDIR=/emacs.d' \
-      'export DOOMDIR=/doom' \
-      'export DOOMLOCALDIR=/doom-local/' \
-      'export PATH="/usr/local/go/bin:/opt/go/bin:/opt/cargo/bin:$PATH"' \
-      > /etc/profile.d/doom.sh \
+      > /etc/profile.d/emacs.sh \
     && mkdir -p /etc/fish/conf.d \
     && printf '%s\n' \
       'set -gx EMACSDIR /emacs.d' \
-      'set -gx DOOMDIR /doom' \
-      'set -gx DOOMLOCALDIR /doom-local/' \
-      'fish_add_path -g /usr/local/go/bin /opt/go/bin /opt/cargo/bin' \
-      > /etc/fish/conf.d/doom.fish
+      > /etc/fish/conf.d/emacs.fish

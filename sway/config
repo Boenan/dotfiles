@@ -46,7 +46,7 @@ output DP-4 mode 3840x2160@120Hz position 0 0 scale 2
 output DP-2 mode 3440x1440@60Hz position 0 0 scale 1.5
 
 # Clamshell mode
-bindswitch --reload --locked lid:on  output eDP-1 disable
+bindswitch --reload --locked lid:on  exec ~/.config/sway/scripts/clamshell.sh
 bindswitch --reload --locked lid:off output eDP-1 enable
 
 ### Idle configuration

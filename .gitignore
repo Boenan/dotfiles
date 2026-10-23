@@ -1,3 +1,4 @@
+.claude/
 .config/gcloud
 .config/tfenv
 .config/exercism
@@ -12,5 +13,11 @@ emacs/recentf
 emacs/tramp
 emacs/transient
 emacs/undo-fu-session
+emacs/tree-sitter
+emacs/history
+emacs/places
+emacs/agent
+emacs/network-security.data
 custom.el
 vim/pack/colors/opt/everforest/after
+vim/.netrwhist

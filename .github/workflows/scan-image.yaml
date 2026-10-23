@@ -12,6 +12,7 @@ on:
           - containerfile
           - containerfile.bg
           - containerfile.ubuntu
+          - containerfile.emacs
 
 env:
   REGISTRY: ghcr.io
