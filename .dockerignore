@@ -17,7 +17,9 @@ containerfile.ubuntu
 .dockerignore
 README.md
 ubuntu-repo.md
-emacs.d
+emacs/*
+!emacs/early-init.el
+!emacs/init.el
 vim
 sway
 swaylock
