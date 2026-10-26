@@ -5,6 +5,7 @@ asdf
 hypr
 nvim
 shell-scripts
+!shell-scripts/xdg-open-portal.sh
 sketchybar
 walker
 waybay
