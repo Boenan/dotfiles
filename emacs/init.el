@@ -16,6 +16,23 @@
   (other-window 1)
   (delete-other-windows))
 
+(defun my/browse-url-default-web-browser (url &rest _args)
+  "Open URL in the desktop's default web browser.
+xdg-open selects the program from the file type.  It opens the
+XHTML preview of markdown-mode as text/xml, which can go to a
+different browser.  If gtk-launch fails, for example in a container
+that does not have the desktop file of the browser, use xdg-open."
+  (let ((desktop (and (executable-find "xdg-settings")
+                      (executable-find "gtk-launch")
+                      (string-trim
+                       (shell-command-to-string
+                        "xdg-settings get default-web-browser 2>/dev/null")))))
+    ;; gtk-launch starts the browser and exits.  Wait for it to get the
+    ;; exit code.  No pty, so the browser does not get SIGHUP.
+    (unless (and desktop (string-suffix-p ".desktop" desktop)
+                 (eq 0 (call-process "gtk-launch" nil nil nil desktop url)))
+      (browse-url-default-browser url))))
+
 (use-package emacs
   :ensure nil
   :custom
@@ -24,6 +41,7 @@
   (use-short-answers t)
   (ring-bell-function #'ignore)
   (display-line-numbers-type 'relative)
+  (browse-url-browser-function #'my/browse-url-default-web-browser)
   :bind (("M-o"     . other-window)
          ("M-O"     . my/other-window-only)
          ("C-'"     . set-mark-command)
@@ -51,6 +69,9 @@
   (repeat-mode 1)
   (winner-mode 1)
   (windmove-default-keybindings)
+  ;; fixed-pitch uses the "Monospace" font (Noto Sans Mono), which is
+  ;; larger than Iosevka.  Markdown code uses fixed-pitch.  Use Iosevka.
+  (set-face-attribute 'fixed-pitch nil :family "Iosevka")
   ;; Iosevka has no Nerd Font icons (eza --icons, starship).  Show the
   ;; private use areas with the Nerd Font symbols.
   (dolist (range '((#xe000 . #xf8ff) (#xf0000 . #xfffff)))
@@ -84,6 +105,29 @@
 
 ;; YAML
 (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
+
+;; Containerfile
+(add-to-list 'auto-mode-alist '("/[Cc]ontainerfile\\(?:\\..*\\)?\\'" . dockerfile-ts-mode))
+
+;; Markdown
+(use-package markdown-mode
+  :custom
+  ;; Make headings larger than the body text.
+  (markdown-header-scaling t)
+  ;; Color code blocks with the major mode of their language.
+  (markdown-fontify-code-blocks-natively t)
+  ;; Preview GitHub Markdown as a full HTML page.  The pandoc
+  ;; template adds the page styles and the code colors.
+  (markdown-command '("pandoc" "--from=gfm" "--to=html5" "--standalone"
+                      "--metadata=pagetitle=Markdown Preview"
+                      "--variable=mainfont:system-ui, sans-serif"
+                      "--variable=monofont:Iosevka, monospace"
+                      "--variable=maxwidth:50em"
+                      "--variable=header-includes:<style>
+code { font-size: 0.95em; }
+:not(pre) > code { background: #eff1f3; padding: 0.1em 0.3em; border-radius: 4px; }
+pre { background: #f0f2f4; border: 1px solid #d8dde3; padding: 1em; border-radius: 6px; }
+</style>")))
 
 ;; Terraform
 (use-package terraform-mode
@@ -150,6 +194,15 @@
 (use-package move-text
   :bind (("M-p" . move-text-up)
          ("M-n" . move-text-down)))
+
+;; Multiple cursors
+(use-package multiple-cursors
+  :bind (("C-S-c"       . mc/edit-lines)
+         ("C->"         . mc/mark-next-like-this)
+         ("C-<"         . mc/mark-previous-like-this)
+         ("C-c C-<"     . mc/mark-all-like-this)
+         ("C-\""        . mc/skip-to-next-like-this)
+         ("C-:"         . mc/skip-to-previous-like-this)))
 
 (use-package gruber-darker-theme
   :config

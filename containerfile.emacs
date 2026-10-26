@@ -56,7 +56,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # fd-find installs the binary as `fdfind` on Debian/Ubuntu, so it gets
 # symlinked to `fd`. libgccjit-13-dev is what lets Emacs native-compile at
 # RUNTIME (offline-safe, it needs no network -- only gcc + libgccjit).
-# shellcheck backs flymake in bash-ts-mode buffers.
+# shellcheck backs flymake in bash-ts-mode buffers. pandoc is the
+# `markdown-command' in init.el, for the Markdown preview (C-c C-c p).
 #
 # Network tools: the base image already has openssh-client, dig, ip, ping,
 # tracepath, mtr, nc, tcpdump, telnet, ethtool and lsof. The list below adds
@@ -84,6 +85,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         wl-clipboard \
         xclip \
         shellcheck \
+        pandoc \
         python3 \
         python3-venv \
         pipx \
@@ -98,7 +100,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         whois \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
     && locale-gen en_US.UTF-8 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pandoc --version
+
+# ---------------------------------------------------------------------------
+# Browser on the host. The container has no browser, so `xdg-open' must run
+# on the host. init.el opens links (and the Markdown preview) with gtk-launch,
+# which fails here because the desktop file of the browser is on the host.
+# Then it uses xdg-open. This xdg-open sends the file or URL to the host's
+# xdg-desktop-portal over the D-Bus session bus, which distrobox shares. It
+# needs no flatpak on the host. busctl comes from the systemd package of the
+# base image. The portal opens http(s) URLs in the default browser. For a
+# file it shows an app chooser, until the same app was selected 3 times.
+# ---------------------------------------------------------------------------
+COPY --chmod=755 shell-scripts/xdg-open-portal.sh /usr/local/bin/xdg-open
+RUN busctl --version >/dev/null \
+    && sh -n /usr/local/bin/xdg-open
 
 # ---------------------------------------------------------------------------
 # Emacs 30 (pure GTK, native-comp) from the PPA
