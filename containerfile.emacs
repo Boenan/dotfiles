@@ -1,9 +1,14 @@
 # Plain Emacs 30 (config from ./emacs) in a distrobox container, fully
 # self-contained.
 #
-# Target: an air-gapped Ubuntu 24.04 VM. Nothing here may need the network at
-# RUN time, so every package, grammar, font, LSP server, native module and
-# native-comp artifact is baked at BUILD time.
+# Target: one air-gapped Ubuntu 24.04 company VM. This file is specific to
+# that VM. It runs an X11 session (not Wayland), so it uses the GTK3 Emacs
+# build. It also hardcodes the host user's UID (471001572) for the rootless
+# podman subuid range. Do not expect this file to work on another machine.
+#
+# Nothing here may need the network at RUN time, so every package, grammar,
+# font, LSP server, native module and native-comp artifact is baked at BUILD
+# time.
 #
 #   Build:  docker build -f containerfile.emacs -t emacs:latest .
 #   Save:   docker save emacs:latest | zstd -o emacs.tar.zst
@@ -118,11 +123,16 @@ RUN busctl --version >/dev/null \
     && sh -n /usr/local/bin/xdg-open
 
 # ---------------------------------------------------------------------------
-# Emacs 30 (pure GTK, native-comp) from the PPA
+# Emacs 30 (GTK3 for X11, native-comp) from the PPA
+#
+# The VM desktop runs an X11 session. The pure-GTK build (emacs-pgtk) is for
+# Wayland. Under X11 it is unsupported. It warns at start and causes keyboard
+# and selection bugs. So install the classic GTK3 build (emacs-gtk), which is
+# the supported build under X11.
 # ---------------------------------------------------------------------------
 RUN add-apt-repository -y ppa:ubuntuhandbook1/emacs \
     && apt-get update \
-    && apt-get install -y emacs-pgtk \
+    && apt-get install -y emacs-gtk \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

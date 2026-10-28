@@ -58,7 +58,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=${{ steps.vars.outputs.suffix }}latest
-            type=raw,value=${{ steps.vars.outputs.suffix }}{{sha}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -68,5 +67,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+      # Each build leaves the old image digest behind as an untagged version.
+      # Delete those untagged versions, so the registry keeps only the tagged
+      # `latest' images. Tagged versions stay, so no `*-latest' is removed.
+      - name: Delete untagged image versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: dotfiles
+          package-type: container
+          delete-only-untagged-versions: 'true'
