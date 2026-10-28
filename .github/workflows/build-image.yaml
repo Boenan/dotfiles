@@ -65,6 +65,12 @@ jobs:
           context: .
           file: ./${{ inputs.containerfile }}
           push: true
+          # Push one plain image manifest, not a manifest list. The default
+          # provenance makes buildx push an index with untagged child
+          # manifests. The cleanup step below would then delete those children
+          # as "untagged" and break the tag. With provenance off, the tag
+          # points straight at the image, so the cleanup is safe.
+          provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
