@@ -133,9 +133,14 @@ RUN add-apt-repository -y ppa:ubuntuhandbook1/emacs \
 #   - fuse-overlayfs, because the kernel cannot mount overlay on overlay.
 #   - A separate rootless storage path. $HOME is the host home, and a podman
 #     on the host must not share (and break) the same image store.
-# Rootless podman needs a subuid/subgid range for the user. distrobox-init
-# creates the user with useradd, and useradd adds that range to /etc/subuid
-# and /etc/subgid.
+# Rootless podman needs a subuid/subgid range for the container user.
+# distrobox-init normally lets useradd add this range. On the company VM the
+# user name has '@' and '.' in it. useradd skips the range for such a name.
+# The range is then missing, and "podman pull" fails with:
+#   lchown /var/local: invalid argument
+# The step below writes the range. It uses the host user's fixed numeric UID
+# (471001572). This UID is constant on the company VM. Both files key on the
+# user, so both files use the UID, not the GID.
 # ---------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
         podman \
@@ -161,6 +166,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       '[storage.options.overlay]' \
       'mount_program = "/usr/bin/fuse-overlayfs"' \
       > /etc/containers/storage.conf \
+    && printf '471001572:100000:65536\n' >> /etc/subuid \
+    && printf '471001572:100000:65536\n' >> /etc/subgid \
     && podman --version
 
 # ---------------------------------------------------------------------------
@@ -218,12 +225,22 @@ RUN curl -fsSL "https://github.com/eza-community/eza/releases/download/v${EZA_VE
 # grammars in `treesit-auto-langs'; start them with M-x eglot. The schema
 # store of yaml-language-server is turned off further down, because it
 # downloads JSON schemas from schemastore.org.
+#
+# commitizen (cz-cli) gives the `cz' and `git-cz' commands for guided commits.
+# cz-conventional-changelog is its default adapter. Both go in the image, so
+# the VM needs no network. commitizen reads its adapter path from a config
+# file. $HOME is the host home, so the image cannot write it. Run this once on
+# the VM (it needs no network, because the adapter is already installed):
+#   echo '{ "path": "cz-conventional-changelog" }' > ~/.czrc
+# The file lives in the host home, so it stays after an image rebuild.
 # ---------------------------------------------------------------------------
 RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
       | tar -C /usr/local --strip-components=1 -xJ \
     && npm install -g --no-fund --no-audit \
          yaml-language-server \
          bash-language-server \
+         commitizen \
+         cz-conventional-changelog \
     && npm cache clean --force
 
 # ---------------------------------------------------------------------------

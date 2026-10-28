@@ -106,6 +106,74 @@ that does not have the desktop file of the browser, use xdg-open."
 ;; YAML
 (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
 
+;; yaml-ts-mode has no indent function.  TAB moves to the next tab
+;; stop, and the tab stops are tab-width (8) columns apart.  Use 2.
+(add-hook 'yaml-ts-mode-hook (lambda () (setq-local tab-width 2)))
+;; Move by YAML keys with the tree-sitter tree.  Each "key: value" is a
+;; block_mapping_pair node.
+(defun my/yaml--pair-p (node)
+  (equal (treesit-node-type node) "block_mapping_pair"))
+
+(defun my/yaml--pair-at-point ()
+  "Return the innermost key/value pair at the indentation of this line."
+  (save-excursion
+    (back-to-indentation)
+    (treesit-parent-until (treesit-node-at (point)) #'my/yaml--pair-p t)))
+
+(defun my/yaml-up-key ()
+  "Move to the parent key.
+On a line inside a value, such as a list item, move to the key of that value."
+  (interactive)
+  (let* ((pair (my/yaml--pair-at-point))
+         (target (if (and pair (< (treesit-node-start pair) (line-beginning-position)))
+                     pair
+                   (and pair (treesit-parent-until pair #'my/yaml--pair-p)))))
+    (if target
+        (goto-char (treesit-node-start target))
+      (message "No parent key"))))
+
+(defun my/yaml--sibling-key (next)
+  (let ((node (my/yaml--pair-at-point)))
+    (while (and node
+                (setq node (if next
+                               (treesit-node-next-sibling node t)
+                             (treesit-node-prev-sibling node t)))
+                (not (my/yaml--pair-p node))))
+    (if node
+        (goto-char (treesit-node-start node))
+      (message "No %s key at this level" (if next "next" "previous")))))
+
+(defun my/yaml-next-key ()
+  "Move to the next key at the same level."
+  (interactive)
+  (my/yaml--sibling-key t))
+
+(defun my/yaml-prev-key ()
+  "Move to the previous key at the same level."
+  (interactive)
+  (my/yaml--sibling-key nil))
+
+(with-eval-after-load 'yaml-ts-mode
+  (keymap-set yaml-ts-mode-map "C-M-u" #'my/yaml-up-key)
+  (keymap-set yaml-ts-mode-map "C-M-n" #'my/yaml-next-key)
+  (keymap-set yaml-ts-mode-map "C-M-p" #'my/yaml-prev-key))
+
+;; YAML with Go templates (Helm).  The YAML tree-sitter parser fails on
+;; {{ }}, so yaml-ts-mode stops highlighting after the first template.
+;; Use the regexp-based yaml-mode and add the template highlighting.
+;; treesit-auto remaps yaml-mode to yaml-ts-mode, so use a derived mode.
+;; go-template-mode opens the .tpl, .tmpl and .gotmpl files.
+(use-package yaml-mode)
+
+(use-package go-template-helper-mode
+  :hook (my/yaml-template-mode . go-template-helper-mode))
+
+(define-derived-mode my/yaml-template-mode yaml-mode "YAML-Template"
+  "Major mode for YAML files with Go templates, such as Helm templates.")
+
+(add-to-list 'auto-mode-alist
+             '("/templates/.*\\.ya?ml\\'" . my/yaml-template-mode))
+
 ;; Containerfile
 (add-to-list 'auto-mode-alist '("/[Cc]ontainerfile\\(?:\\..*\\)?\\'" . dockerfile-ts-mode))
 
