@@ -400,6 +400,20 @@ RUN emacs --batch --init-directory=/emacs.d \
         (unless (featurep 'ghostel-module) \
           (error \"ghostel module did not load\")))"
 
+# ---------------------------------------------------------------------------
+# Mode line. init.el draws the round pill ends as SVG images and shows the
+# minor modes with minions. Without SVG support the pills have square ends,
+# and the air-gapped VM cannot install the library later. Stop the build here
+# if SVG or minions is missing.
+# ---------------------------------------------------------------------------
+RUN emacs --batch --init-directory=/emacs.d \
+      -f package-initialize -l /emacs.d/init.el \
+      --eval "(progn \
+        (unless (image-type-available-p 'svg) \
+          (error \"Emacs has no SVG support\")) \
+        (unless (boundp 'minions-mode-line-modes) \
+          (error \"minions did not load\")))"
+
 # Every mutable path must be writable by the unprivileged host user that
 # distrobox maps in -- their UID is unknown at build time. This covers elpa/,
 # eln-cache/, custom.el, recentf, savehist, save-place and transient.

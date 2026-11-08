@@ -301,7 +301,69 @@ window shows BUFFER or its viewport."
 
 (use-package gruber-darker-theme
   :config
-  (load-theme 'gruber-darker t))
+  (load-theme 'gruber-darker t)
+  ;; The bar has the buffer color, so the pills stand out from it.
+  (dolist (face '(mode-line mode-line-inactive))
+    (set-face-background face "#181818")))
+
+;; Mode line: show each group of information as a separate rounded pill.
+;; Minions puts the minor modes in one menu, so the modes pill stays short.
+(use-package minions
+  :demand t
+  :custom (minions-mode-line-delimiters '("" . "")))
+
+(defface my/mode-line-pill '((t :background "#282828"))
+  "Face for the text of a mode line pill.")
+
+(require 'svg)
+
+(defvar my/mode-line-pill-ends nil
+  "Cache of the pill end strings.  The keys are (SIDE . HEIGHT).")
+
+(defun my/mode-line-pill-end (side)
+  "Return the round end of a pill as a string.  SIDE is `left' or `right'.
+Font glyphs do not fill the line height, so use an image with the
+height of the line.  Without SVG support, return a plain space."
+  (let* ((height (frame-char-height))
+         (key (cons side height)))
+    (or (alist-get key my/mode-line-pill-ends nil nil #'equal)
+        (setf (alist-get key my/mode-line-pill-ends nil nil #'equal)
+              (if (not (image-type-available-p 'svg))
+                  (propertize " " 'face 'my/mode-line-pill)
+                (let* ((width (ceiling height 2))
+                       (svg (svg-create width height))
+                       (font (font-info (face-font 'mode-line))))
+                  (svg-rectangle svg 0 0 width height :fill "#181818")
+                  (svg-circle svg (if (eq side 'left) width 0)
+                              (/ height 2.0) (/ height 2.0) :fill "#282828")
+                  ;; Align the image with the font: the top of the
+                  ;; image is at the top of the line.
+                  (propertize " " 'display
+                              (svg-image svg :ascent (round (* 100.0 (aref font 8))
+                                                            height)))))))))
+
+(defun my/mode-line-pill (spec)
+  "Return the mode line construct SPEC as a pill, or nil if it is empty."
+  (let ((text (string-trim (format-mode-line spec))))
+    (unless (string-empty-p text)
+      ;; The mode line reads the result of :eval again, so escape %.
+      (setq text (replace-regexp-in-string "%" "%%" text t t))
+      (add-face-text-property 0 (length text) 'my/mode-line-pill t text)
+      (concat (my/mode-line-pill-end 'left) text
+              (my/mode-line-pill-end 'right) " "))))
+
+(setq-default mode-line-format
+              '("%e" mode-line-front-space
+                (:eval (my/mode-line-pill
+                        '("" mode-line-mule-info mode-line-client
+                          mode-line-modified mode-line-remote
+                          mode-line-window-dedicated)))
+                (:eval (my/mode-line-pill mode-line-buffer-identification))
+                (:eval (my/mode-line-pill mode-line-position))
+                (:eval (my/mode-line-pill '(vc-mode vc-mode)))
+                mode-line-format-right-align
+                (:eval (my/mode-line-pill minions-mode-line-modes))
+                (:eval (my/mode-line-pill mode-line-misc-info))))
 
 (use-package ek9
   :vc (:url "https://github.com/Boenan/ek9" :rev "0.1.1"))
