@@ -245,6 +245,33 @@ pre { background: #f0f2f4; border: 1px solid #d8dde3; padding: 1em; border-radiu
           (seq-remove (lambda (choice)
                         (memq (cdr choice) '(:downloads-shell :temp-shell)))
                       choices)))
+  ;; Send a desktop notification when an agent needs the user.
+  (defun my/agent-shell-notify (buffer body)
+    "Show BODY for agent-shell BUFFER, unless the user is looking at BUFFER.
+The user is looking at BUFFER when Emacs has focus and the selected
+window shows BUFFER or its viewport."
+    (unless (let ((current (window-buffer (selected-window))))
+              (and (eq (frame-focus-state) t)
+                   (eq buffer
+                       (or (and (fboundp 'agent-shell-viewport--shell-buffer)
+                                (agent-shell-viewport--shell-buffer current))
+                           current))))
+      (start-process "agent-shell-notify" nil
+                     "notify-send" "--app-name=Emacs"
+                     (buffer-name buffer) body)))
+  (defun my/agent-shell-subscribe-notifications ()
+    (let ((buffer (current-buffer)))
+      (agent-shell-subscribe-to
+       :shell-buffer buffer
+       :event 'turn-complete
+       :on-event (lambda (_event)
+                   (my/agent-shell-notify buffer "Task is complete")))
+      (agent-shell-subscribe-to
+       :shell-buffer buffer
+       :event 'permission-request
+       :on-event (lambda (_event)
+                   (my/agent-shell-notify buffer "Agent needs permission")))))
+  (add-hook 'agent-shell-mode-hook #'my/agent-shell-subscribe-notifications)
   ;; Emacs 30 has no `system-sleep' library.  Give agent-shell the two
   ;; functions it uses, so it blocks sleep while an agent is busy.
   (unless (locate-library "system-sleep")
