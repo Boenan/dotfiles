@@ -277,4 +277,4 @@ pre { background: #f0f2f4; border: 1px solid #d8dde3; padding: 1em; border-radiu
   (load-theme 'gruber-darker t))
 
 (use-package ek9
-  :vc (:url "https://github.com/Boenan/ek9" :rev :newest))
+  :vc (:url "https://github.com/Boenan/ek9" :rev "0.1.1"))
