@@ -1,0 +1,148 @@
+@import url("theme.css");
+
+* {
+    font-family: 'Hack Nerd Font', 'Noto Sans Mono', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+window {
+    background-color: transparent;
+}
+
+.card {
+    background-color: @bg;
+    color: @fg;
+    border: 1px solid @bg-hover;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 4px 6px;
+}
+
+.title {
+    color: @yellow;
+    font-size: 14px;
+}
+
+switch {
+    background-color: @bg-raised;
+    background-image: none;
+    border: none;
+    border-radius: 9px;
+}
+
+switch:checked {
+    background-color: @green;
+}
+
+switch slider {
+    background-color: @fg-bright;
+    background-image: none;
+    border: none;
+    border-radius: 9px;
+    min-width: 16px;
+    min-height: 16px;
+}
+
+button {
+    background-color: transparent;
+    background-image: none;
+    color: @fg;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 9px;
+}
+
+button:hover {
+    background-color: @bg-raised;
+}
+
+button:hover label {
+    color: @fg-bright;
+}
+
+button:disabled label {
+    color: @grey;
+}
+
+.network.active label {
+    color: @green;
+}
+
+.page-title {
+    padding-bottom: 6px;
+}
+
+.network:hover, .action:hover, .footer button:hover {
+    background-color: @yellow;
+}
+
+.network:hover label, .network.active:hover label,
+.action:hover label, .footer button:hover label {
+    color: @bg-dim;
+}
+
+.footer {
+    border-top: 1px solid @bg-raised;
+    padding-top: 6px;
+}
+
+.footer button label {
+    color: @niagara;
+}
+
+.empty, .prompt {
+    color: @grey;
+    padding: 6px;
+}
+
+entry {
+    background-color: @bg-raised;
+    background-image: none;
+    color: @fg-bright;
+    caret-color: @yellow;
+    border: 1px solid @bg-hover;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+
+entry:focus {
+    border-color: @yellow;
+}
+
+calendar {
+    background-color: transparent;
+    color: @fg;
+    border: none;
+    padding: 4px;
+}
+
+calendar.header {
+    background-color: transparent;
+    border: none;
+    color: @yellow;
+}
+
+calendar.button {
+    color: @niagara;
+}
+
+calendar.button:hover {
+    color: @yellow;
+}
+
+calendar.highlight {
+    color: @grey;
+}
+
+calendar:indeterminate {
+    color: @bg-hover;
+}
+
+calendar:selected {
+    background-color: @yellow;
+    color: @bg-dim;
+    border-radius: 4px;
+}

@@ -1,0 +1,18 @@
+/* =============================================================================
+ * Gruber Darker Color Palette (same values as the Emacs gruber-darker-theme)
+ * Shared by style.css and network_popup.css.
+ * ============================================================================= */
+@define-color fg #e4e4ef;
+@define-color fg-bright #f4f4ff;
+@define-color bg-dim #101010;
+@define-color bg #181818;
+@define-color bg-raised #282828;
+@define-color bg-hover #453d41;
+@define-color grey #95a99f;
+@define-color red #f43841;
+@define-color red-bright #ff4f58;
+@define-color green #73c936;
+@define-color yellow #ffdd33;
+@define-color brown #cc8c3c;
+@define-color niagara #96a6c8;
+@define-color wisteria #9e95c7;
