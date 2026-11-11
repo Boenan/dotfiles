@@ -9,6 +9,8 @@
 (setq custom-file (locate-user-emacs-file "custom.el"))
 (load custom-file 'noerror)
 
+(setq dired-dwim-target t)
+
 ;; Defaults
 (defun my/other-window-only ()
   "Go to the other window and close all other windows."
