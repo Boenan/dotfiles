@@ -370,4 +370,4 @@ height of the line.  Without SVG support, return a plain space."
                 (:eval (my/mode-line-pill mode-line-misc-info))))
 
 (use-package ek9
-  :vc (:url "https://github.com/Boenan/ek9" :rev "0.1.2"))
+  :vc (:url "https://github.com/Boenan/ek9" :rev "0.2.0"))
