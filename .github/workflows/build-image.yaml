@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -40,7 +42,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set suffix
+      - name: Set suffix and short commit hash
         id: vars
         run: |
           FILE="${{ inputs.containerfile }}"
@@ -50,6 +52,7 @@ jobs:
             SUFFIX="${FILE#containerfile.}"
             echo "suffix=${SUFFIX}-" >> $GITHUB_OUTPUT
           fi
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -57,7 +60,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.vars.outputs.suffix }}latest
+            type=raw,value=${{ steps.vars.outputs.suffix }}${{ steps.vars.outputs.sha }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -74,9 +77,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # Each build leaves the old image digest behind as an untagged version.
-      # Delete those untagged versions, so the registry keeps only the tagged
-      # `latest' images. Tagged versions stay, so no `*-latest' is removed.
+      # A rebuild of the same commit leaves the old image digest behind as an
+      # untagged version. Delete those untagged versions. Tagged versions
+      # stay, so no commit hash tag is removed.
       - name: Delete untagged image versions
         uses: actions/delete-package-versions@v5
         with:
