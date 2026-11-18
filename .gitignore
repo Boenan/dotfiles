@@ -18,6 +18,7 @@ emacs/history
 emacs/places
 emacs/agent
 emacs/network-security.data
+emacs/.mc-lists.el
 custom.el
 vim/pack/colors/opt/everforest/after
 vim/.netrwhist
